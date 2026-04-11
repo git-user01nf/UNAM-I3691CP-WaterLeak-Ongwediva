@@ -3,95 +3,49 @@
 ## Civil Engineering - Water Leak & Infrastructure Reporting App
 
 ### Project Information
-- **Group Name:** [Your Group Name]
+- **Group Name:** [We need to suggest a group name]
 - **Module:** Computer Programming I (13691CP)
 - **Semester:** 2026
 - **Institution:** University of Namibia, JEDS Campus
 
 ### Team Members
 
-| Name | Student Number | Role |
-|------|---------------|------|
-| [Your Name] | [Number] | Lead Developer |
-| [Member 2] | [Number] | Project Manager |
-| [Member 3] | [Number] | Firebase Lead |
-| [Member 4] | [Number] | UI/UX Lead |
-| [Member 5] | [Number] | Documentation Lead |
-| [Member 6] | [Number] | GitHub Manager |
-| [Add all 18 members] | | |
+### 👨‍💻 App Features Developers
+| # | Student Number | Name | Discipline |
+|---|---------------|------|------------|
+| 1 | 225141639 | LAMEK, LS | Civil |
+| 2 | 218202150 | ONESMUS, EI | Mining |
+| 3 | 225130866 | HAUSIKU, AM | Electrical |
 
-### Technology Stack
-- **Frontend:** React Native with Expo
-- **Backend:** Firebase (Auth, Firestore, Storage)
-- **Navigation:** React Navigation
-- **Styling:** StyleSheet API
+### 🎨 UI/UX Design
+| # | Student Number | Name | Discipline |
+|---|---------------|------|------------|
+| 1 | 225061732 | KAKOLOLO, LK | Metallurgical |
+| 2 | 225159511 | HITILAVALI, RP | Mining |
+| 3 | 225142546 | HAIDUWA, SS | Electrical |
 
-### Project Structure
-\\\
-UNAM-I3691CP-WaterLeak-Ongwediva/
-├── src/
-│   ├── screens/auth/       # Login, Register
-│   ├── screens/main/       # Home, Report, Profile
-│   ├── screens/admin/      # Dashboard
-│   ├── components/         # Reusable components
-│   ├── navigation/         # Stack navigation
-│   ├── services/           # Firebase services
-│   ├── utils/              # Helper functions
-│   ├── constants/          # Colors, configs
-│   ├── hooks/              # Custom hooks
-│   └── context/            # Auth context
-├── docs/                   # SRS, User Manual
-├── designs/                # Figma exports
-├── members/                # Individual contribution logs
-├── meetings/               # Meeting minutes
-├── testing/                # Test reports
-├── firebase/               # Firebase rules
-├── builds/                 # APK files
-└── assets/                 # Images, fonts
-\\\
+### 💻 Coders
+| # | Student Number | Name | Discipline |
+|---|---------------|------|------------|
+| 1 | 224122754 | FULAYI, MN | Electronics & Computer |
+| 2 | 225003708 | MUYOBA, M | Electrical |
+| 3 | 225042738 | NGESHEYA, MN | Mechanical |
 
-### Setup Instructions
+### 🧪 Testing & Development
+| # | Student Number | Name | Discipline |
+|---|---------------|------|------------|
+| 1 | 221119019 | KALOLA, ENT | Mining |
+| 2 | 225043491 | ANGULA, EWT | Mechanical |
+| 3 | 225044307 | WAPOTA, EVE | Mechanical |
 
-#### Prerequisites
-- Node.js 18+
-- Expo Go app on phone
-- Git
+### 📝 Documentation
+| # | Student Number | Name | Discipline |
+|---|---------------|------|------------|
+| 1 | 225041243 | MARTIN, N | Electrical |
+| 2 | 225044072 | KAKOLO, SN | Electrical |
+| 3 | 224122479 | FRANS, RP | Mining |
 
-#### Installation
-\\\ash
-# Clone the repository
+
+
 git clone https://github.com/git-user01nf/UNAM-I3691CP-WaterLeak-Ongwediva.git
 
-# Install dependencies
-cd UNAM-I3691CP-WaterLeak-Ongwediva
-npm install
-
-# Start the app
-npx expo start
-\\\
-
-### Features (Planned)
-- [ ] User Authentication (Register/Login/Logout)
-- [ ] Report Infrastructure Issues
-- [ ] Upload Images to Firebase Storage
-- [ ] Real-time Updates
-- [ ] Admin Dashboard
-- [ ] Push Notifications
-- [ ] GPS Location Tagging
-- [ ] Comments & Likes
-- [ ] Report Status Tracking
-
-### Git Workflow
-1. Always pull latest changes: \git pull origin main\
-2. Create feature branch: \git checkout -b feature/your-feature\
-3. Commit changes: \git commit -m "feat: description"\
-4. Push branch: \git push origin feature/your-feature\
-5. Create Pull Request on GitHub
-
-### Contact
-- **Lecturer:** Mr. Mathew Abisai
-- **Project Manager:** [Name]
-- **Lead Developer:** [Your Name]
-
----
-*Created for Computer Programming I (13691CP) - UNAM JEDS Campus*
