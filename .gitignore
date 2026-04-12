@@ -1,0 +1,10 @@
+﻿node_modules/
+.expo/
+.web/
+.env
+.DS_Store
+*.log
+dist/
+build/
+*.apk
+*.aab
