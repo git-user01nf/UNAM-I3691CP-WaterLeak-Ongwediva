@@ -1,6 +1,6 @@
 # 🚰 Ongwediva Water Leak & Infrastructure Reporter
 
-> A mobile application enabling residents of Ongwediva to report infrastructure issues directly to the town council — in real time.
+> A mobile application enabling residents of Ongwediva to report infrastructure issues directly to the town council in real time.
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 📖 About the Project
 
-The **Ongwediva Water Leak & Infrastructure Reporter** is a cross-platform mobile app built with React Native and Expo. It empowers residents within Ongwediva to flag infrastructure problems — such as water leaks, potholes, broken street lights, sanitation failures, public safety concerns, and environmental hazards — directly to the local town council.
+The **Ongwediva Water Leak & Infrastructure Reporter** is a cross-platform mobile app built with React Native and Expo. It empowers residents within Ongwediva to flag infrastructure problems such as water leaks, potholes, broken street lights, sanitation failures, public safety concerns, and environmental hazards directly to the local town council.
 
 The app verifies that users are within **15 km of Ongwediva** before allowing reports to be submitted, ensuring reports are geographically relevant. Town council administrators have access to a dedicated admin panel where they can manage, update, and respond to reports, and post public announcements.
 
@@ -66,7 +66,7 @@ Make sure you have the following installed before proceeding:
 
 - [Node.js](https://nodejs.org/) **v18 or higher**
 - [Git](https://git-scm.com/)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/) — install globally with:
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) install globally with:
   ```bash
   npm install -g expo-cli
   ```
