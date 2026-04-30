@@ -91,7 +91,7 @@ Make sure you have the following installed before proceeding:
 
 ### Environment Variables
 
-This project uses Firebase and Cloudinary. You must create a `.env` file in the root directory and populate it with your own credentials.
+This project uses Firebase. You must create a `.env` file in the root directory and populate it with your own credentials.
 
 ```env
 # Firebase Configuration
