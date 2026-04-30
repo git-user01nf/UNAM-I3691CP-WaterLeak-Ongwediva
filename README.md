@@ -35,7 +35,7 @@ The app verifies that users are within **15 km of Ongwediva** before allowing re
 |---|---|
 | 🔐 **Authentication** | User registration and login via Firebase Auth |
 | 📍 **Location Verification** | Confirms user is within 15 km of Ongwediva before submission |
-| 📷 **Image Uploads** | Attach photos to reports via camera or gallery (stored on Cloudinary) |
+| 📷 **Image Uploads** | Attach photos to reports via camera or gallery (stored on firebase storage) |
 | 📋 **Issue Reporting** | Report water leaks, road damage, sanitation, safety & environmental issues |
 | 📡 **Real-Time Feed** | Live feed of community reports with category filters |
 | 👍 **Engagement** | Like and comment on reports |
@@ -50,7 +50,7 @@ The app verifies that users are within **15 km of Ongwediva** before allowing re
 |---|---|
 | **Frontend** | React Native with Expo |
 | **Backend** | Firebase (Authentication + Firestore) |
-| **Image Storage** | Cloudinary |
+| **Image Storage** | Firebase storage |
 | **Navigation** | React Navigation |
 | **Styling** | StyleSheet API + Expo Linear Gradient |
 | **Location** | Expo Location API |
@@ -146,8 +146,8 @@ UNAM-I3691CP-WaterLeak-Ongwediva/
 ## ⚙️ How It Works
 
 1. **User signs up / logs in** using Firebase Authentication.
-2. **Location is checked** — the app uses Expo Location API to confirm the user is within 15 km of Ongwediva Town Centre.
-3. **User submits a report** by selecting a category, writing a description, and optionally attaching an image (uploaded to Cloudinary).
+2. **Location is checked** , the app uses Expo Location API to confirm the user is within 15 km of Ongwediva Town Centre.
+3. **User submits a report** by selecting a category, writing a description, and optionally attaching an image (uploaded to firebase storage.
 4. **Report is saved** to Firestore and appears on the community feed in real time.
 5. **Other residents** can view, like, and comment on active reports.
 6. **Admin users** (town council) log in to the admin panel, where they can update report statuses and post public announcements visible to all users.
@@ -156,7 +156,7 @@ UNAM-I3691CP-WaterLeak-Ongwediva/
 
 ## 👥 Team
 
-**Group 13 — Computer Programming I (I3691CP), Semester 1, 2026**
+**Group 13 Computer Programming I (I3691CP), Semester 1, 2026**
 **Engineering Domain:** Civil Engineering | **Institution:** UNAM
 
 ### Project Management
