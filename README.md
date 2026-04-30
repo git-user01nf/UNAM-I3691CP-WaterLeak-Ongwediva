@@ -102,10 +102,7 @@ FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 FIREBASE_APP_ID=your_app_id
 
-# Cloudinary Configuration
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_UPLOAD_PRESET=your_upload_preset
-```
+
 
 > ⚠️ **Never commit your `.env` file.** Ensure `.env` is listed in your `.gitignore`.
 
