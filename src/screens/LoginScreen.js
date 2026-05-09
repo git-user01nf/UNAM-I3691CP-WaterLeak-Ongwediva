@@ -36,7 +36,7 @@ export default function LoginScreen({ navigation }) {
     <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Ongwediva</Text>
+          <Text style={styles.title}>Fix-Flow</Text>
           <Text style={styles.subtitle}>Infrastructure Reporter</Text>
         </View>
 

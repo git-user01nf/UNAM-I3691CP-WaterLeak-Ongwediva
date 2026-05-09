@@ -237,7 +237,7 @@ export default function HomeScreen({ navigation }) {
       <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={styles.headerTitle}>Ongwediva</Text>
+            <Text style={styles.headerTitle}>Fix-Flow</Text>
             <Text style={styles.headerSubtitle}>Water Leak & Infrastructure Reporter</Text>
           </View>
           <View style={styles.headerButtons}>
