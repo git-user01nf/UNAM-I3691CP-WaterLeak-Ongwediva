@@ -112,7 +112,7 @@ export default function ReportScreen({ navigation, route }) {
     }
   };
 
-  // Voice note functions
+  // Voice recording functions
   const startRecording = async () => {
     try {
       const permission = await Audio.requestPermissionsAsync();
@@ -160,6 +160,9 @@ export default function ReportScreen({ navigation, route }) {
       let videoUrl = null;
       let voiceUrl = null;
 
+      const user = auth.currentUser;
+      if (!user) throw new Error('User not logged in');
+
       if (image) {
         imageUrl = await uploadToCloudinary(image);
         console.log('Uploaded to Cloudinary:', imageUrl);
@@ -167,15 +170,13 @@ export default function ReportScreen({ navigation, route }) {
 
       if (video) {
         videoUrl = await uploadVideoToCloudinary(video);
-        console.log('Uploaded video:', videoUrl);
+        console.log('Uploaded video to Cloudinary:', videoUrl);
       }
 
       if (voiceNote) {
         voiceUrl = await uploadAudioToCloudinary(voiceNote);
-        console.log('Uploaded voice note:', voiceUrl);
+        console.log('Uploaded voice note to Cloudinary:', voiceUrl);
       }
-
-      const user = auth.currentUser;
 
       const reportData = {
         title,

@@ -1,3 +1,4 @@
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -31,11 +32,12 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.local
+.env.*.local
 
 # typescript
 *.tsbuildinfo
 
-# generated native folders - iOS is ignored, Android is NOT ignored
+# generated native folders
 /ios
-# /android   <-- COMMENTED OUT - Android folder needs to be tracked for build resources
