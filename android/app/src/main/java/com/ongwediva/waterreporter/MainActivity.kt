@@ -1,4 +1,4 @@
-package com.fulayi.ongwedivawaterreporter
+package com.ongwediva.waterreporter
 
 import android.os.Build
 import android.os.Bundle
