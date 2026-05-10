@@ -1,4 +1,4 @@
-rootProject.name = 'fixflow'
+rootProject.name = 'Fix-Flow'
 
 dependencyResolutionManagement {
   versionCatalogs {

@@ -1,4 +1,4 @@
-package com.waqas_gift.testfixflow
+package com.ongwediva.waterreporter
 
 import android.app.Application
 import android.content.res.Configuration
