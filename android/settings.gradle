@@ -1,9 +1,14 @@
 pluginManagement {
-    includeBuild("../node_modules/@react-native/gradle-plugin")
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            url("$rootDir/../node_modules/react-native/android")
+        }
+    }
+    plugins {
+        id("com.facebook.react") version "0.73.4"
     }
 }
 
