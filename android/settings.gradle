@@ -1,3 +1,19 @@
 rootProject.name = 'Fix-Flow'
 
+def expoModules = new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
+if (expoModules.exists()) {
+    apply from: expoModules
+    useExpoModules()
+}
+
+def nativeModules = new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle")
+if (nativeModules.exists()) {
+    apply from: nativeModules
+    applyNativeModulesSettingsGradle(settings)
+}
+
 include ':app'
+def reactGradlePlugin = new File(["node", "--print", "require.resolve('@react-native/gradle-plugin/package.json')"].execute(null, rootDir).text.trim()).getParentFile()
+if (reactGradlePlugin.exists()) {
+    includeBuild(reactGradlePlugin)
+}
