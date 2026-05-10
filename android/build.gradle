@@ -4,17 +4,10 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        // ✅ Add local node_modules Maven paths
-        maven {
-            url("$rootDir/../node_modules/react-native/android")
-        }
-        maven {
-            url("$rootDir/../node_modules/expo/android/maven")
-        }
+        maven { url("$rootDir/../node_modules/react-native/android") }
     }
     dependencies {
         classpath("com.android.tools.build:gradle:8.1.1")
-        // ✅ Use the plugin from node_modules
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
     }
@@ -25,12 +18,5 @@ allprojects {
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
-        // ✅ Also add here for all projects
-        maven {
-            url("$rootDir/../node_modules/react-native/android")
-        }
-        maven {
-            url("$rootDir/../node_modules/expo/android/maven")
-        }
     }
 }

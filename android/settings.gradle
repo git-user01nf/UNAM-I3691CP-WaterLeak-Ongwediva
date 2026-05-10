@@ -1,19 +1,22 @@
 pluginManagement {
+    includeBuild("../node_modules/@react-native/gradle-plugin")
     repositories {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven {
-            url("$rootDir/../node_modules/react-native/android")
-        }
-    }
-    plugins {
-        id("com.facebook.react") version "0.73.4"
     }
 }
 
+plugins {
+    id("com.facebook.react.settings")
+}
+
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+    ex.autolinkLibrariesFromCommand()
+}
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -23,5 +26,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'Fix-Flow'
-
 include ':app'
