@@ -1,4 +1,7 @@
-<resources>
-  <color name="colorPrimary">#023c69</color>
-  <color name="colorPrimaryDark">#ffffff</color>
-</resources>
+<?xml version="1.0" encoding="utf-8"?> 
+<resources> 
+    <color name="splashscreen_background">#1e3c72</color> 
+    <color name="colorPrimary">#1e3c72</color> 
+    <color name="colorPrimaryDark">#2a5298</color> 
+    <color name="colorAccent">#2196F3</color> 
+</resources> 

@@ -1,39 +1,30 @@
 {
   "expo": {
-    "name": "Fix-Flow",
-    "slug": "ongwediva-water-reporter",
+    "name": "fix-flow",
+    "slug": "test-fix-flow",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
     "android": {
-      "package": "com.ongwediva.waterreporter",
-      "permissions": [
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.INTERNET"
-      ]
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.waqas_gift.testfixflow"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow Ongwediva Reporter to use your location to verify you are within Ongwediva."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "cameraPermission": "Allow Ongwediva Reporter to access your camera to take photos of infrastructure issues."
-        }
-      ]
-    ]
+    }
   }
 }
