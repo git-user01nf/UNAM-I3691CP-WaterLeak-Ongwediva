@@ -164,7 +164,6 @@ export default function ReportDetailScreen({ navigation, route }) {
     );
   };
 
-  // FIX #1: Removed the error alert - comment adds silently
   const addComment = async () => {
     if (!commentText.trim()) {
       Alert.alert('Error', 'Please enter a comment');
@@ -189,7 +188,6 @@ export default function ReportDetailScreen({ navigation, route }) {
 
       setCommentText('');
     } catch (error) {
-      // FIX #1: NO ALERT HERE - comment adds silently without "Request Failed" popup
       console.error('Comment error:', error);
     }
   };
@@ -284,7 +282,6 @@ export default function ReportDetailScreen({ navigation, route }) {
             </View>
           </View>
 
-          {/* FIX #2: Delete button only shows for post owner (already correct) */}
           {isPostOwner && (
             <View style={styles.ownerActions}>
               <TouchableOpacity 
@@ -317,6 +314,36 @@ export default function ReportDetailScreen({ navigation, route }) {
 
           <Text style={styles.descriptionTitle}>Description</Text>
           <Text style={styles.description}>{report.description}</Text>
+
+          {/* Video Display Section */}
+          {report.videoUrl && (
+            <View style={styles.mediaContainer}>
+              <Text style={styles.mediaLabel}>🎥 Video Evidence</Text>
+              <TouchableOpacity 
+                style={styles.playButton}
+                onPress={() => {
+                  Alert.alert('Video', 'Video evidence attached. URL: ' + report.videoUrl);
+                }}
+              >
+                <Text style={styles.playButtonText}>▶️ Play Video</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Voice Note Display Section */}
+          {report.voiceUrl && (
+            <View style={styles.mediaContainer}>
+              <Text style={styles.mediaLabel}>🎙️ Voice Note</Text>
+              <TouchableOpacity 
+                style={styles.playButton}
+                onPress={() => {
+                  Alert.alert('Voice Note', 'Voice note attached. URL: ' + report.voiceUrl);
+                }}
+              >
+                <Text style={styles.playButtonText}>🔊 Listen</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.likeContainer}>
             <TouchableOpacity 
@@ -396,6 +423,10 @@ const styles = StyleSheet.create({
   metaLabel: { fontWeight: 'bold', color: '#333' },
   descriptionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 8 },
   description: { fontSize: 15, color: '#555', lineHeight: 22, marginBottom: 15 },
+  mediaContainer: { backgroundColor: '#f8f9fa', padding: 12, borderRadius: 10, marginBottom: 15 },
+  mediaLabel: { fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 8 },
+  playButton: { backgroundColor: '#1e3c72', padding: 10, borderRadius: 8, alignItems: 'center' },
+  playButtonText: { color: '#fff', fontWeight: 'bold' },
   likeContainer: { alignItems: 'center', marginBottom: 20 },
   likeButton: { backgroundColor: '#f8f9fa', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0', width: '50%' },
   likedButton: { backgroundColor: '#dc3545', borderColor: '#dc3545' },
@@ -426,5 +457,5 @@ const styles = StyleSheet.create({
   editContainer: { padding: 20 },
   editLabel: { fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 5, marginTop: 10 },
   editInput: { backgroundColor: '#f5f5f5', borderRadius: 10, padding: 12, fontSize: 15, borderWidth: 1, borderColor: '#ddd' },
-  editTextArea: { height: 120, textAlignVertical: 'top' }
+  editTextArea: { height: 120, textAlignVertical: 'top' },
 });
