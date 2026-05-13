@@ -6,6 +6,49 @@ import {
 import { doc, updateDoc, increment, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, getDoc, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Video } from 'expo-av';
+import { Audio } from 'expo-av';
+
+// Audio Player Component
+function AudioPlayer({ audioUrl }) {
+  const [sound, setSound] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  async function playSound() {
+    if (sound) {
+      await sound.unloadAsync();
+    }
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri: audioUrl },
+      { shouldPlay: true }
+    );
+    setSound(newSound);
+    setIsPlaying(true);
+    newSound.setOnPlaybackStatusUpdate((status) => {
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+      }
+    });
+  }
+
+  async function stopSound() {
+    if (sound) {
+      await sound.stopAsync();
+      setIsPlaying(false);
+    }
+  }
+
+  return (
+    <View style={styles.audioControls}>
+      <TouchableOpacity style={styles.playButton} onPress={playSound}>
+        <Text style={styles.playButtonText}>▶️ Play</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.stopButton} onPress={stopSound}>
+        <Text style={styles.stopButtonText}>⏹️ Stop</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function ReportDetailScreen({ navigation, route }) {
   const { report: initialReport } = route.params;
@@ -315,33 +358,29 @@ export default function ReportDetailScreen({ navigation, route }) {
           <Text style={styles.descriptionTitle}>Description</Text>
           <Text style={styles.description}>{report.description}</Text>
 
-          {/* Video Display Section */}
+          {/* Video Display */}
           {report.videoUrl && (
             <View style={styles.mediaContainer}>
               <Text style={styles.mediaLabel}>🎥 Video Evidence</Text>
-              <TouchableOpacity 
-                style={styles.playButton}
-                onPress={() => {
-                  Alert.alert('Video', 'Video evidence attached. URL: ' + report.videoUrl);
-                }}
-              >
-                <Text style={styles.playButtonText}>▶️ Play Video</Text>
-              </TouchableOpacity>
+              <Video
+                source={{ uri: report.videoUrl }}
+                rate={1.0}
+                volume={1.0}
+                isMuted={false}
+                resizeMode="contain"
+                shouldPlay={false}
+                isLooping={false}
+                useNativeControls={true}
+                style={styles.videoPlayer}
+              />
             </View>
           )}
 
-          {/* Voice Note Display Section */}
+          {/* Voice Note Display */}
           {report.voiceUrl && (
             <View style={styles.mediaContainer}>
               <Text style={styles.mediaLabel}>🎙️ Voice Note</Text>
-              <TouchableOpacity 
-                style={styles.playButton}
-                onPress={() => {
-                  Alert.alert('Voice Note', 'Voice note attached. URL: ' + report.voiceUrl);
-                }}
-              >
-                <Text style={styles.playButtonText}>🔊 Listen</Text>
-              </TouchableOpacity>
+              <AudioPlayer audioUrl={report.voiceUrl} />
             </View>
           )}
 
@@ -425,8 +464,12 @@ const styles = StyleSheet.create({
   description: { fontSize: 15, color: '#555', lineHeight: 22, marginBottom: 15 },
   mediaContainer: { backgroundColor: '#f8f9fa', padding: 12, borderRadius: 10, marginBottom: 15 },
   mediaLabel: { fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 8 },
-  playButton: { backgroundColor: '#1e3c72', padding: 10, borderRadius: 8, alignItems: 'center' },
+  videoPlayer: { width: '100%', height: 200, borderRadius: 10 },
+  audioControls: { flexDirection: 'row', gap: 10 },
+  playButton: { flex: 1, backgroundColor: '#1e3c72', padding: 10, borderRadius: 8, alignItems: 'center' },
   playButtonText: { color: '#fff', fontWeight: 'bold' },
+  stopButton: { flex: 1, backgroundColor: '#dc3545', padding: 10, borderRadius: 8, alignItems: 'center' },
+  stopButtonText: { color: '#fff', fontWeight: 'bold' },
   likeContainer: { alignItems: 'center', marginBottom: 20 },
   likeButton: { backgroundColor: '#f8f9fa', padding: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0', width: '50%' },
   likedButton: { backgroundColor: '#dc3545', borderColor: '#dc3545' },
