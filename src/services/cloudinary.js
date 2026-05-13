@@ -1,9 +1,9 @@
 // src/services/cloudinary.js
 import * as ImageManipulator from 'expo-image-manipulator';
-import {
-  CLOUDINARY_CLOUD_NAME,
-  CLOUDINARY_UPLOAD_PRESET
-} from '@env';
+
+// Hardcoded Cloudinary configuration (temporary fix for native build)
+const CLOUDINARY_CLOUD_NAME = 'dlbjuvumj';
+const CLOUDINARY_UPLOAD_PRESET = 'ongwediva_reports';
 
 // Compress image before upload
 export const compressImage = async (uri) => {
@@ -89,7 +89,7 @@ export const uploadAudioToCloudinary = async (audioUri) => {
     });
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     formData.append('folder', 'ongwediva_reports');
-    formData.append('resource_type', 'video'); // Audio uses video resource type
+    formData.append('resource_type', 'video');
 
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`,
