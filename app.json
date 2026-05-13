@@ -1,42 +1,40 @@
 {
   "expo": {
     "name": "Fix-Flow",
-    "slug": "ongwediva-water-reporter",
+    "slug": "fixflow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3c72"
+    },
+    "assetBundlePatterns": ["**/*"],
     "android": {
-      "package": "com.ongwediva.waterreporter",
+      "package": "com.fixflow.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e3c72"
+      },
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.RECORD_AUDIO"
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
       ]
     },
     "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow Fix-Flow to verify your location."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "cameraPermission": "Allow Fix-Flow to take photos."
-        }
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "e4b4338d-7b70-46f0-83b9-35edb358b41f"
-      }
-    }
+      ["expo-location", {
+        "locationAlwaysAndWhenInUsePermission": "Allow Fix-Flow to verify your location."
+      }],
+      ["expo-image-picker", {
+        "cameraPermission": "Allow Fix-Flow to take photos and videos."
+      }]
+    ]
   }
 }
