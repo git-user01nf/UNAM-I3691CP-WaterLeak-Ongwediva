@@ -1,4 +1,4 @@
-package com.ongwediva.waterreporter
+package com.fixflow.app
 
 import android.app.Application
 import android.content.res.Configuration
