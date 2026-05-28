@@ -2,7 +2,7 @@
   "expo": {
     "name": "Fix-Flow",
     "slug": "fixflow",
-    "version": "1.0.3",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,14 +12,12 @@
       "backgroundColor": "#1e3c72"
     },
     "assetBundlePatterns": ["**/*"],
-    "notification": {
-      "icon": "./assets/icon.png",
-      "color": "#1e3c72",
-      "iosDisplayInForeground": true,
-      "androidMode": "default"
-    },
     "android": {
-      "package": "com.ongwediva.waterreporter",
+      "package": "com.fixflow.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e3c72"
+      },
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
@@ -27,27 +25,24 @@
         "ACCESS_COARSE_LOCATION",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "INTERNET",
-        "NOTIFICATIONS"
-      ],
-      "googleServicesFile": "./android/app/google-services.json"
-    },
-    "ios": {
-      "bundleIdentifier": "com.ongwediva.waterreporter",
-      "googleServicesFile": "./ios/GoogleService-Info.plist",
-      "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
-      }
+        "INTERNET"
+      ]
     },
     "plugins": [
-      ["expo-location", {
-        "locationAlwaysAndWhenInUsePermission": "Allow Fix-Flow to verify your location."
-      }],
-      ["expo-image-picker", {
-        "cameraPermission": "Allow Fix-Flow to take photos and videos."
-      }],
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "expo-av",
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Fix-Flow to verify your location."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Fix-Flow to take photos and videos."
+        }
+      ]
     ]
   }
 }
