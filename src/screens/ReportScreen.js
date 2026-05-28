@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { uploadToCloudinary, uploadVideoToCloudinary, uploadAudioToCloudinary } from '../services/cloudinary';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +22,69 @@ const CATEGORIES = [
   { id: 'safety', name: '🛡️ Safety', icon: '🛡️', color: '#F44336' },
   { id: 'environment', name: '🌿 Environment', icon: '🌿', color: '#8BC34A' }
 ];
+
+// Function to send push notifications to all users
+const sendPushNotificationToAllUsers = async (title, body, reportData) => {
+  try {
+    // Get all users who have push tokens
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    const tokens = [];
+    
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      if (userData.pushToken && userData.pushToken !== '' && userData.pushToken !== null) {
+        tokens.push(userData.pushToken);
+      }
+    });
+    
+    if (tokens.length === 0) {
+      console.log('No users with push tokens found');
+      return;
+    }
+    
+    console.log(`Sending notifications to ${tokens.length} users`);
+    
+    // Send notifications using Expo's push service
+    const messages = tokens.map(token => ({
+      to: token,
+      sound: 'default',
+      title: title,
+      body: body,
+      data: {
+        reportId: reportData.id || '',
+        category: reportData.category,
+        screen: 'Home'
+      }
+    }));
+    
+    // Send notifications in batches to avoid rate limiting
+    for (let i = 0; i < messages.length; i += 100) {
+      const batch = messages.slice(i, i + 100);
+      await Promise.all(batch.map(async (message) => {
+        try {
+          const response = await fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message),
+          });
+          const data = await response.json();
+          if (data.errors) {
+            console.error('Push notification error:', data.errors);
+          }
+        } catch (error) {
+          console.error('Failed to send push notification:', error);
+        }
+      }));
+    }
+    
+    console.log('All push notifications sent');
+  } catch (error) {
+    console.error('Error sending push notifications:', error);
+  }
+};
 
 export default function ReportScreen({ navigation, route }) {
   const { categoryId } = route.params || {};
@@ -194,7 +257,23 @@ export default function ReportScreen({ navigation, route }) {
         createdAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, 'reports'), reportData);
+      const docRef = await addDoc(collection(db, 'reports'), reportData);
+      
+      // Get category icon for notification
+      const categoryIcon = {
+        'water': '💧',
+        'roads': '🛣️',
+        'sanitation': '🗑️',
+        'safety': '🛡️',
+        'environment': '🌿'
+      }[selectedCategory] || '📋';
+      
+      // Send push notifications to all users
+      await sendPushNotificationToAllUsers(
+        `${categoryIcon} New ${selectedCategory} Report`,
+        `${title} - by ${user.displayName || user.email.split('@')[0]}`,
+        { id: docRef.id, category: selectedCategory }
+      );
 
       Alert.alert('Success', 'Report submitted successfully!');
       navigation.goBack();

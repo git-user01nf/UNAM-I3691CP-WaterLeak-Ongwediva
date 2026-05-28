@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -12,20 +12,42 @@ import AnnouncementsScreen from './src/screens/AnnouncementsScreen';
 import VerifyLocationScreen from './src/screens/VerifyLocationScreen';
 import { auth } from './src/services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useNotifications } from './src/hooks/useNotifications';
+import { saveFCMTokenToFirestore } from './src/services/notificationService';
 
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  
+  // Initialize notifications
+  const { expoPushToken, fcmToken, notification } = useNotifications();
 
   React.useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      
+      // Save push token when user logs in
+      if (user && (fcmToken || expoPushToken)) {
+        const token = Platform.OS === 'android' ? fcmToken : expoPushToken;
+        if (token) {
+          await saveFCMTokenToFirestore(user.uid, token);
+        }
+      }
+      
       setLoading(false);
     });
     return unsubscribe;
-  }, []);
+  }, [fcmToken, expoPushToken]);
+
+  // Handle notification when app is opened from background/dead state
+  React.useEffect(() => {
+    if (notification) {
+      console.log('Notification received:', notification);
+      // You can handle navigation here if needed
+    }
+  }, [notification]);
 
   if (loading) {
     return (
