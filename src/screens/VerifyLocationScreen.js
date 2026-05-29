@@ -1,1 +1,1 @@
-// VerifyLocationScreen - GPS verification within Ongwediva 
+// VerifyLocationScreen - GPS verification 
