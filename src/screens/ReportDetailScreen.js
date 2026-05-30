@@ -1,34 +1,34 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 
-export default function RegisterScreen({ navigation }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleRegister = () => {
-    if (!name || !email || !password) return alert('Fill all fields');
-    alert('Account created successfully');
-    navigation.navigate('LoginScreen');
-  };
+export default function ReportDetailScreen({ route, navigation }) {
+  const { report } = route.params;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
-      <TextInput placeholder="Full Name" style={styles.input} onChangeText={setName} />
-      <TextInput placeholder="Email" style={styles.input} onChangeText={setEmail} />
-      <TextInput placeholder="Password" secureTextEntry style={styles.input} onChangeText={setPassword} />
-      <TouchableOpacity style={styles.btn} onPress={handleRegister}>
-        <Text style={styles.btnText}>Register</Text>
-      </TouchableOpacity>
-    </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.location}>{report.location}</Text>
+        <Text style={[styles.status, { color: report.status === 'pending' ? '#e74c3c' : report.status === 'in-progress' ? '#f39c12' : '#2ecc71' }]}>
+          Status: {report.status.toUpperCase()}
+        </Text>
+        <Text style={styles.date}>Reported: {report.timestamp}</Text>
+        <Text style={styles.description}>Description: Water leak reported at this location. Crew has been notified.</Text>
+        
+        <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Back to Home</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:{ flex:1, justifyContent:'center', padding:20 },
-  title:{ fontSize:28, fontWeight:'bold', marginBottom:20 },
-  input:{ borderWidth:1, padding:12, marginBottom:12, borderRadius:8 },
-  btn:{ backgroundColor:'#007bff', padding:15, borderRadius:8 },
-  btnText:{ color:'#fff', textAlign:'center', fontWeight:'bold' }
+  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 20 },
+  card: { backgroundColor: 'white', padding: 20, borderRadius: 15, elevation: 3 },
+  location: { fontSize: 22, fontWeight: 'bold', color: '#2c3e50', marginBottom: 10 },
+  status: { fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
+  date: { fontSize: 14, color: '#7f8c8d', marginBottom: 15 },
+  description: { fontSize: 16, color: '#34495e', lineHeight: 24, marginBottom: 30 },
+  button: { backgroundColor: '#3498db', padding: 15, borderRadius: 10, alignItems: 'center' },
+  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' }
 });
