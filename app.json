@@ -8,6 +8,11 @@
 "primaryColor": "#1e3c72",
     "orientation": "portrait",
 "scheme": "fixflow",
+"extra": {
+  "eas": {
+    "projectId": "fixflow-ongwediva-2026"
+  }
+},
 "backgroundColor": "#1e3c72",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
