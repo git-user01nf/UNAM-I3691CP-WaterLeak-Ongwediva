@@ -4,6 +4,8 @@
     "slug": "fixflow",
     "version": "1.0.0",
 "description": "Fix-Flow: Water leak reporting app for Ongwediva infrastructure management.",
+"owner": "git-user01nf",
+"primaryColor": "#1e3c72",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
