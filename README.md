@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+"# Ongwediva Water Leak Reporter" 
+"" 
+"Mobile app for reporting water leaks and infrastructure issues in Ongwediva." 
+=======
 # 🚰 Ongwediva Water Leak & Infrastructure Reporter
 
 > A mobile application enabling residents of Ongwediva to report infrastructure issues directly to the town council in real time.
@@ -201,3 +206,4 @@ This project was developed as part of the **I3691CP Computer Programming I** mod
 ---
 
 *University of Namibia · I3691CP · Group 13 · 2026*
+>>>>>>> 3e7653803520f4522222d99f8c098b37a479b6c3
