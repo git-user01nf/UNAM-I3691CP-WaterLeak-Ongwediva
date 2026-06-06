@@ -1,0 +1,34 @@
+echo {> app.json
+echo   "expo": {>> app.json
+echo     "name": "Water Leak Reporter",>> app.json
+echo     "slug": "water-leak-ongwediva",>> app.json
+echo     "version": "1.0.0",>> app.json
+echo     "orientation": "portrait",>> app.json
+echo     "icon": "./assets/icon.png",>> app.json
+echo     "userInterfaceStyle": "light",>> app.json
+echo     "splash": {>> app.json
+echo       "image": "./assets/splash.png",>> app.json
+echo       "resizeMode": "contain",>> app.json
+echo       "backgroundColor": "#ffffff">> app.json
+echo     },>> app.json
+echo     "assetBundlePatterns": [>> app.json
+echo       "**/*">> app.json
+echo     ],>> app.json
+echo     "ios": {>> app.json
+echo       "supportsTablet": true>> app.json
+echo     },>> app.json
+echo     "android": {>> app.json
+echo       "adaptiveIcon": {>> app.json
+echo         "foregroundImage": "./assets/adaptive-icon.png",>> app.json
+echo         "backgroundColor": "#ffffff">> app.json
+echo       },>> app.json
+echo       "permissions": [>> app.json
+echo         "android.permission.ACCESS_FINE_LOCATION",>> app.json
+echo         "android.permission.ACCESS_COARSE_LOCATION">> app.json
+echo       ]>> app.json
+echo     },>> app.json
+echo     "web": {>> app.json
+echo       "favicon": "./assets/favicon.png">> app.json
+echo     }>> app.json
+echo   }>> app.json
+echo }>> app.json
