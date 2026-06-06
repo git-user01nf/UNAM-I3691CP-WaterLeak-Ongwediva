@@ -1,3 +1,16 @@
+<<<<<<< HEAD
 node_modules/ 
 .expo/ 
 .env 
+=======
+﻿node_modules/
+.expo/
+.web/
+.env
+.DS_Store
+*.log
+dist/
+build/
+*.apk
+*.aab
+>>>>>>> 3e7653803520f4522222d99f8c098b37a479b6c3
