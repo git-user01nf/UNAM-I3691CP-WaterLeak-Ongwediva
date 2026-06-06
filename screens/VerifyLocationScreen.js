@@ -31,3 +31,28 @@ useEffect(() => {
       setVerifying(false);
     }
   };
+if (verifying) {
+    return (
+      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+        <View style={styles.content}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.title}>Verifying Location...</Text>
+          <Text style={styles.message}>Please wait while we verify your location</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
+
+  if (verified) {
+    return (
+      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.successIcon}>
+            <Text style={styles.iconText}>✅</Text>
+          </View>
+          <Text style={styles.successTitle}>Location Verified!</Text>
+          <Text style={styles.message}>You are within Ongwediva. Redirecting...</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
