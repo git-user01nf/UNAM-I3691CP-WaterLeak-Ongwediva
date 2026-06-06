@@ -7,6 +7,8 @@
 "owner": "git-user01nf",
 "primaryColor": "#1e3c72",
     "orientation": "portrait",
+"scheme": "fixflow",
+"backgroundColor": "#1e3c72",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
