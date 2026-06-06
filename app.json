@@ -18,6 +18,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+"ios": {
+  "supportsTablet": true,
+  "bundleIdentifier": "com.fixflow.app"
+},
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
