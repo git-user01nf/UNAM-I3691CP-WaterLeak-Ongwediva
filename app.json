@@ -17,6 +17,9 @@
     "assetBundlePatterns": ["*/"],
     "android": {
       "package": "com.fixflow.app",
+"versionCode": 1,
+"compileSdkVersion": 34,
+"targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
