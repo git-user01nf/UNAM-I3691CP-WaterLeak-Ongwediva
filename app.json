@@ -22,6 +22,10 @@
   "supportsTablet": true,
   "bundleIdentifier": "com.fixflow.app"
 },
+"web": {
+  "favicon": "./assets/favicon.png",
+  "bundler": "metro"
+},
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
