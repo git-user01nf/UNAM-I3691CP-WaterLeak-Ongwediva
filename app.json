@@ -27,6 +27,7 @@
 "versionCode": 1,
 "compileSdkVersion": 34,
 "targetSdkVersion": 34,
+"googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
