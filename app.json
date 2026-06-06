@@ -3,6 +3,7 @@
     "name": "Fix-Flow",
     "slug": "fixflow",
     "version": "1.0.0",
+"description": "Fix-Flow: Water leak reporting app for Ongwediva infrastructure management.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
