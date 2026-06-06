@@ -73,3 +73,19 @@ return (
       </View>
     </LinearGradient>
   );
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginTop: 20 },
+  successTitle: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginTop: 20 },
+  errorTitle: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginTop: 20 },
+  message: { fontSize: 16, color: '#fff', textAlign: 'center', marginTop: 10, opacity: 0.9 },
+  coordinates: { fontSize: 14, color: '#fff', textAlign: 'center', marginTop: 20, opacity: 0.7 },
+  radius: { fontSize: 14, color: '#fff', textAlign: 'center', marginTop: 5, opacity: 0.7 },
+  errorText: { fontSize: 14, color: '#ff6b6b', textAlign: 'center', marginTop: 10 },
+  successIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(40,167,69,0.3)', justifyContent: 'center', alignItems: 'center' },
+  errorIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(220,53,69,0.3)', justifyContent: 'center', alignItems: 'center' },
+  iconText: { fontSize: 40 },
+  retryButton: { backgroundColor: '#fff', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25, marginTop: 30 },
+  retryButtonText: { color: '#1e3c72', fontSize: 16, fontWeight: 'bold' },
+});
