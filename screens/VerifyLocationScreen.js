@@ -56,3 +56,20 @@ if (verifying) {
       </LinearGradient>
     );
   }
+return (
+    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.errorIcon}>
+          <Text style={styles.iconText}>📍</Text>
+        </View>
+        <Text style={styles.errorTitle}>Location Not Verified</Text>
+        <Text style={styles.message}>
+          You must be within {MAX_DISTANCE_KM}km of Ongwediva to use this app.
+        </Text>
+        {error && <Text style={styles.errorText}>{error}</Text>}
+        <TouchableOpacity style={styles.retryButton} onPress={verifyLocation}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
+  );
