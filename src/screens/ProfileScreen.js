@@ -231,3 +231,80 @@ export default function ProfileScreen({ navigation }) {
     </LinearGradient>
   );
 }
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scroll: { flexGrow: 1, paddingBottom: 30 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  
+  profileSection: {
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
+  profileImageContainer: {
+    position: 'relative',
+    marginBottom: 15,
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  profileImagePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  profileImagePlaceholderText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  uploadOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 60,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#1e3c72',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  editIconText: {
+    fontSize: 16,
+  },
+  profileButtons: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  photoButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  photoButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
