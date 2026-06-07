@@ -110,3 +110,10 @@ export default function ProfileScreen({ navigation }) {
       ]
     );
   };
+    if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#1e3c72" />
+      </View>
+    );
+  }
