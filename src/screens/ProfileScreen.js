@@ -370,3 +370,45 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 5,
   },
+    settingsCard: {
+    backgroundColor: '#fff',
+    margin: 20,
+    marginBottom: 10,
+    padding: 5,
+    borderRadius: 15,
+    elevation: 2,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  settingIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  settingText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  settingArrow: {
+    fontSize: 16,
+    color: '#999',
+  },
+  
+  logoutButton: {
+    backgroundColor: '#dc3545',
+    margin: 20,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
