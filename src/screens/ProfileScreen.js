@@ -154,3 +154,50 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+                {/* User Info Section */}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>Personal Information</Text>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>👤 Username</Text>
+            <Text style={styles.infoValue}>{userData?.username}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>📧 Email</Text>
+            <Text style={styles.infoValue}>{user?.email}</Text>
+          </View>
+          
+          {userData?.phone && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>📞 Phone</Text>
+              <Text style={styles.infoValue}>{userData.phone}</Text>
+            </View>
+          )}
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>📅 Joined</Text>
+            <Text style={styles.infoValue}>
+              {userData?.createdAt?.toDate?.()?.toLocaleDateString() || 'Just now'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Statistics Section */}
+        <View style={styles.statsCard}>
+          <Text style={styles.statsTitle}>Your Activity</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statLabel}>Reports</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statLabel}>Likes Given</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statLabel}>Comments</Text>
+            </View>
+          </View>
+        </View>
