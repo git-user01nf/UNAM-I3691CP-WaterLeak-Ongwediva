@@ -15,3 +15,16 @@ export default function ProfileScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
+    useEffect(() => {
+    loadUserData();
+  }, []);
+    const loadUserData = async () => {
+    const currentUser = auth.currentUser;
+    setUser(currentUser);
+    
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    const data = userDoc.data();
+    setUserData(data);
+    setProfilePic(data?.profilePic || null);
+    setLoading(false);
+  };
