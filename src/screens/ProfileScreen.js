@@ -9,16 +9,19 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth';
+
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
-    useEffect(() => {
+
+  useEffect(() => {
     loadUserData();
   }, []);
-    const loadUserData = async () => {
+
+  const loadUserData = async () => {
     const currentUser = auth.currentUser;
     setUser(currentUser);
     
@@ -28,7 +31,8 @@ export default function ProfileScreen({ navigation }) {
     setProfilePic(data?.profilePic || null);
     setLoading(false);
   };
-    const pickImage = async () => {
+
+  const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Please grant gallery permissions');
@@ -46,7 +50,8 @@ export default function ProfileScreen({ navigation }) {
       uploadProfilePicture(result.assets[0].uri);
     }
   };
-    const takePhoto = async () => {
+
+  const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Please grant camera permissions');
@@ -63,23 +68,20 @@ export default function ProfileScreen({ navigation }) {
       uploadProfilePicture(result.assets[0].uri);
     }
   };
-    const uploadProfilePicture = async (uri) => {
+
+  const uploadProfilePicture = async (uri) => {
     setUploading(true);
     try {
       const userId = auth.currentUser.uid;
       
-      // Fetch the image as blob
       const response = await fetch(uri);
       const blob = await response.blob();
       
-      // Upload to Firebase Storage
       const storageRef = ref(storage, `profilePics/${userId}`);
       await uploadBytes(storageRef, blob);
       
-      // Get download URL
       const downloadUrl = await getDownloadURL(storageRef);
       
-      // Save URL to Firestore
       await updateDoc(doc(db, 'users', userId), {
         profilePic: downloadUrl,
         updatedAt: new Date().toISOString()
@@ -93,7 +95,9 @@ export default function ProfileScreen({ navigation }) {
     } finally {
       setUploading(false);
     }
-  };  const handleLogout = async () => {
+  };
+
+  const handleLogout = async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -110,18 +114,19 @@ export default function ProfileScreen({ navigation }) {
       ]
     );
   };
-    if (loading) {
+
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#1e3c72" />
       </View>
     );
   }
-    return (
+
+  return (
     <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         
-        {/* Profile Picture Section */}
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={pickImage} disabled={uploading}>
             <View style={styles.profileImageContainer}>
@@ -154,7 +159,7 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
-                {/* User Info Section */}
+
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Personal Information</Text>
           
@@ -183,7 +188,6 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Statistics Section */}
         <View style={styles.statsCard}>
           <Text style={styles.statsTitle}>Your Activity</Text>
           <View style={styles.statsRow}>
@@ -201,7 +205,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
         </View>
-                {/* Settings Section */}
+
         <View style={styles.settingsCard}>
           <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Coming Soon', 'Edit profile feature coming soon!')}>
             <Text style={styles.settingIcon}>✏️</Text>
@@ -222,7 +226,6 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>🚪 Logout</Text>
         </TouchableOpacity>
@@ -231,39 +234,40 @@ export default function ProfileScreen({ navigation }) {
     </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { flexGrow: 1, paddingBottom: 30 },
+  scroll: { flexGrow: 1, paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
   profileSection: {
     alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
+    paddingTop: 50,
+    paddingBottom: 25,
   },
   profileImageContainer: {
     position: 'relative',
-    marginBottom: 15,
+    marginBottom: 20,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 4,
     borderColor: '#fff',
   },
   profileImagePlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#2196F3',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: '#4A90E2',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: '#fff',
   },
   profileImagePlaceholderText: {
-    fontSize: 48,
+    fontSize: 52,
     fontWeight: 'bold',
     color: '#fff',
   },
@@ -273,84 +277,101 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 60,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 65,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   editIcon: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#1e3c72',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#2a5298',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#fff',
   },
   editIconText: {
-    fontSize: 16,
+    fontSize: 18,
   },
   profileButtons: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 20,
   },
   photoButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 25,
   },
   photoButtonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
-    infoCard: {
+  
+  infoCard: {
     backgroundColor: '#fff',
-    margin: 20,
-    marginBottom: 10,
-    padding: 20,
-    borderRadius: 15,
-    elevation: 2,
+    marginHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 15,
+    padding: 25,
+    borderRadius: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   infoTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1e3c72',
-    marginBottom: 15,
+    marginBottom: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 8,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#f5f5f5',
   },
   infoLabel: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#666',
+    fontWeight: '500',
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#333',
   },
-    statsCard: {
+  
+  statsCard: {
     backgroundColor: '#fff',
-    margin: 20,
-    marginBottom: 10,
+    marginHorizontal: 20,
+    marginBottom: 15,
     padding: 20,
-    borderRadius: 15,
-    elevation: 2,
+    borderRadius: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   statsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e3c72',
-    marginBottom: 15,
+    marginBottom: 20,
     textAlign: 'center',
   },
   statsRow: {
@@ -361,50 +382,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#1e3c72',
+    color: '#2a5298',
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 5,
+    color: '#999',
+    marginTop: 8,
+    fontWeight: '500',
   },
-    settingsCard: {
+  
+  settingsCard: {
     backgroundColor: '#fff',
-    margin: 20,
-    marginBottom: 10,
+    marginHorizontal: 20,
+    marginBottom: 15,
     padding: 5,
-    borderRadius: 15,
-    elevation: 2,
+    borderRadius: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
   settingIcon: {
-    fontSize: 20,
-    marginRight: 12,
+    fontSize: 22,
+    marginRight: 15,
   },
   settingText: {
     flex: 1,
     fontSize: 16,
     color: '#333',
+    fontWeight: '500',
   },
   settingArrow: {
-    fontSize: 16,
-    color: '#999',
+    fontSize: 18,
+    color: '#bbb',
   },
   
   logoutButton: {
     backgroundColor: '#dc3545',
-    margin: 20,
-    padding: 15,
-    borderRadius: 10,
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 30,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   logoutButtonText: {
     color: '#fff',
