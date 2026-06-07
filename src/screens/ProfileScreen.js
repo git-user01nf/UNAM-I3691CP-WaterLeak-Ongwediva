@@ -338,3 +338,35 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
   },
+    statsCard: {
+    backgroundColor: '#fff',
+    margin: 20,
+    marginBottom: 10,
+    padding: 20,
+    borderRadius: 15,
+    elevation: 2,
+  },
+  statsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e3c72',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e3c72',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 5,
+  },
