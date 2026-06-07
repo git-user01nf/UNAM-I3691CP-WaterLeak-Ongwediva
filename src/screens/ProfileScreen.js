@@ -63,3 +63,34 @@ export default function ProfileScreen({ navigation }) {
       uploadProfilePicture(result.assets[0].uri);
     }
   };
+    const uploadProfilePicture = async (uri) => {
+    setUploading(true);
+    try {
+      const userId = auth.currentUser.uid;
+      
+      // Fetch the image as blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, `profilePics/${userId}`);
+      await uploadBytes(storageRef, blob);
+      
+      // Get download URL
+      const downloadUrl = await getDownloadURL(storageRef);
+      
+      // Save URL to Firestore
+      await updateDoc(doc(db, 'users', userId), {
+        profilePic: downloadUrl,
+        updatedAt: new Date().toISOString()
+      });
+      
+      setProfilePic(downloadUrl);
+      Alert.alert('Success', 'Profile picture updated!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      Alert.alert('Error', 'Failed to upload profile picture');
+    } finally {
+      setUploading(false);
+    }
+  };
