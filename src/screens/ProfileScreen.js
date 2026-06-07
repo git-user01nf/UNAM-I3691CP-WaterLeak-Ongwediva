@@ -9,3 +9,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth';
+export default function ProfileScreen({ navigation }) {
+  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [profilePic, setProfilePic] = useState(null);
