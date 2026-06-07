@@ -46,3 +46,20 @@ export default function ProfileScreen({ navigation }) {
       uploadProfilePicture(result.assets[0].uri);
     }
   };
+    const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant camera permissions');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      uploadProfilePicture(result.assets[0].uri);
+    }
+  };
