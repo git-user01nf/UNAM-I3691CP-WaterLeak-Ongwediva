@@ -308,3 +308,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
+    infoCard: {
+    backgroundColor: '#fff',
+    margin: 20,
+    marginBottom: 10,
+    padding: 20,
+    borderRadius: 15,
+    elevation: 2,
+  },
+  infoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e3c72',
+    marginBottom: 15,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+  },
