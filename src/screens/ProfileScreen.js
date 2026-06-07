@@ -201,3 +201,33 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
         </View>
+                {/* Settings Section */}
+        <View style={styles.settingsCard}>
+          <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Coming Soon', 'Edit profile feature coming soon!')}>
+            <Text style={styles.settingIcon}>✏️</Text>
+            <Text style={styles.settingText}>Edit Profile</Text>
+            <Text style={styles.settingArrow}>→</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Coming Soon', 'Change password feature coming soon!')}>
+            <Text style={styles.settingIcon}>🔒</Text>
+            <Text style={styles.settingText}>Change Password</Text>
+            <Text style={styles.settingArrow}>→</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Coming Soon', 'Notification settings coming soon!')}>
+            <Text style={styles.settingIcon}>🔔</Text>
+            <Text style={styles.settingText}>Notifications</Text>
+            <Text style={styles.settingArrow}>→</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>🚪 Logout</Text>
+        </TouchableOpacity>
+        
+      </ScrollView>
+    </LinearGradient>
+  );
+}
