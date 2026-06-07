@@ -117,3 +117,40 @@ export default function ProfileScreen({ navigation }) {
       </View>
     );
   }
+    return (
+    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        
+        {/* Profile Picture Section */}
+        <View style={styles.profileSection}>
+          <TouchableOpacity onPress={pickImage} disabled={uploading}>
+            <View style={styles.profileImageContainer}>
+              {profilePic ? (
+                <Image source={{ uri: profilePic }} style={styles.profileImage} />
+              ) : (
+                <View style={styles.profileImagePlaceholder}>
+                  <Text style={styles.profileImagePlaceholderText}>
+                    {userData?.username?.charAt(0).toUpperCase() || '?'}
+                  </Text>
+                </View>
+              )}
+              {uploading && (
+                <View style={styles.uploadOverlay}>
+                  <ActivityIndicator color="#fff" />
+                </View>
+              )}
+              <View style={styles.editIcon}>
+                <Text style={styles.editIconText}>📷</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+          
+          <View style={styles.profileButtons}>
+            <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
+              <Text style={styles.photoButtonText}>📷 Camera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
+              <Text style={styles.photoButtonText}>🖼️ Gallery</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
