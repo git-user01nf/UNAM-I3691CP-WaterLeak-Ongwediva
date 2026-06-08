@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Fix-Flow",
-    "slug": "fixflow",
+    "name": "Ongwediva Water Leak Reporter",
+    "slug": "ongwediva-water-leak-reporter",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,14 +13,13 @@
     },
     "assetBundlePatterns": ["**/*"],
     "android": {
-      "package": "com.fixflow.app",
+      "package": "com.ongwediva.waterleakreporter",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1e3c72"
       },
       "permissions": [
         "CAMERA",
-        "RECORD_AUDIO",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "READ_EXTERNAL_STORAGE",
@@ -34,15 +33,20 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Fix-Flow to verify your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow Ongwediva Water Leak Reporter to verify your location within Ongwediva."
         }
       ],
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Allow Fix-Flow to take photos and videos."
+          "cameraPermission": "Allow Ongwediva Water Leak Reporter to take photos of water leaks."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0d3b3e1b-23e2-4af8-9aa1-f099f9931e5a"
+      }
+    }
   }
 }

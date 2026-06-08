@@ -1,3 +1,4 @@
+// HomeScreen.js - Updated with new colors
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -7,17 +8,8 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, increment, getD
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, CATEGORIES, getCategoryColor } from '../utils/colors';
 
-// Category definitions
-const CATEGORIES = [
-  { id: 'all', name: 'All Posts', icon: '📋', color: '#6c757d' },
-  { id: 'water', name: 'Water Leaks', icon: '💧', color: '#2196F3' },
-  { id: 'roads', name: 'Roads', icon: '🛣️', color: '#9C27B0' },
-  { id: 'sanitation', name: 'Sanitation', icon: '🗑️', color: '#4CAF50' },
-  { id: 'safety', name: 'Safety', icon: '🛡️', color: '#F44336' },
-  { id: 'environment', name: 'Environment', icon: '🌿', color: '#8BC34A' },
-  { id: 'announcements', name: 'Announcements', icon: '📢', color: '#FF9800' }
-];
 
 export default function HomeScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('all');
@@ -47,7 +39,6 @@ export default function HomeScreen({ navigation }) {
       setAllPosts(postsData);
       filterPostsByCategory(activeTab, postsData);
       
-      // Check which posts the current user has liked
       if (currentUser) {
         const likedStatus = {};
         for (const post of postsData) {
@@ -98,40 +89,27 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleLike = async (postId, currentLikes) => {
-    // Silently ignore if not logged in
-    if (!user) {
-      return;
-    }
-
-    // Silently ignore if already liked
-    if (likedPosts[postId]) {
-      return;
-    }
+    if (!user) return;
+    if (likedPosts[postId]) return;
 
     try {
       const reportRef = doc(db, 'reports', postId);
       const likeRef = doc(db, 'reports', postId, 'likes', user.uid);
       
-      // Check if like already exists (double-check)
       const existingLike = await getDoc(likeRef);
       if (existingLike.exists()) {
         setLikedPosts(prev => ({ ...prev, [postId]: true }));
         return;
       }
       
-      // Create the like document
       await setDoc(likeRef, { 
         userId: user.uid,
         likedAt: new Date()
       });
       
-      // Increment like count
       await updateDoc(reportRef, { likes: increment(1) });
-      
-      // Update local state
       setLikedPosts(prev => ({ ...prev, [postId]: true }));
       
-      // Update the post in the local list to reflect new like count
       const updatedPosts = allPosts.map(post => 
         post.id === postId ? { ...post, likes: (post.likes || 0) + 1 } : post
       );
@@ -139,16 +117,15 @@ export default function HomeScreen({ navigation }) {
       filterPostsByCategory(activeTab, updatedPosts);
       
     } catch (error) {
-      // Silently ignore errors
       console.error('Like error:', error);
     }
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'in_progress': return { text: '🟡 In Progress', color: '#ffc107' };
-      case 'resolved': return { text: '🟢 Resolved', color: '#28a745' };
-      default: return { text: '🔴 Pending', color: '#dc3545' };
+      case 'in_progress': return { text: '🟡 In Progress', color: COLORS.status.inProgress };
+      case 'resolved': return { text: '🟢 Resolved', color: COLORS.status.resolved };
+      default: return { text: '🔴 Pending', color: COLORS.status.pending };
     }
   };
 
@@ -169,7 +146,7 @@ export default function HomeScreen({ navigation }) {
         activeOpacity={0.9}
       >
         {item.category === 'water' && (
-          <View style={styles.waterLeakBadge}>
+          <View style={[styles.waterLeakBadge, { backgroundColor: COLORS.categories.water }]}>
             <Text style={styles.waterLeakBadgeText}>💧 WATER LEAK REPORT</Text>
           </View>
         )}
@@ -224,7 +201,7 @@ export default function HomeScreen({ navigation }) {
       <Text style={styles.emptyTitle}>No reports yet</Text>
       <Text style={styles.emptyText}>Be the first to report an issue!</Text>
       <TouchableOpacity 
-        style={styles.emptyButton}
+        style={[styles.emptyButton, { backgroundColor: COLORS.primary.main }]}
         onPress={() => navigation.navigate('Report', { categoryId: activeTab === 'all' ? null : activeTab })}
       >
         <Text style={styles.emptyButtonText}>➕ Report Now</Text>
@@ -234,7 +211,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.header}>
+      <LinearGradient colors={COLORS.primary.gradient} style={styles.header}>
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.headerTitle}>Fix-Flow</Text>
@@ -300,7 +277,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate('Report', { categoryId: activeTab === 'all' ? null : activeTab })}
         >
           <LinearGradient
-            colors={['#2196F3', '#764ba2']}
+            colors={COLORS.primary.gradient}
             style={styles.fabGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -316,12 +293,14 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: COLORS.neutral.background,
   },
   header: {
     paddingTop: 50,
-    paddingBottom: 15,
+    paddingBottom: 20,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerTop: {
     flexDirection: 'row',
@@ -329,155 +308,150 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.neutral.white,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
-    fontSize: 10,
-    color: '#fff',
-    opacity: 0.8,
-    marginTop: 2,
+    fontSize: 11,
+    color: COLORS.neutral.text.muted,
+    marginTop: 4,
   },
   headerButtons: {
     flexDirection: 'row',
     gap: 10,
   },
   adminButton: {
-    backgroundColor: 'rgba(255,215,0,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
+    backgroundColor: 'rgba(255,215,0,0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   adminButtonText: {
-    color: '#ffd700',
+    color: '#FFD700',
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   logoutButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   logoutText: {
-    color: '#fff',
+    color: COLORS.neutral.white,
     fontSize: 11,
+    fontWeight: '500',
   },
   tabsWrapper: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.neutral.white,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    zIndex: 10,
+    borderBottomColor: COLORS.neutral.border,
   },
   tabsContainer: {
     flexGrow: 0,
   },
   tabsContent: {
     paddingHorizontal: 10,
-    paddingVertical: 8,
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 25,
-    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginHorizontal: 6,
+    borderRadius: 30,
+    backgroundColor: '#F1F5F9',
     borderTopWidth: 3,
   },
   activeTab: {
-    backgroundColor: '#e8f0fe',
+    backgroundColor: COLORS.primary.main,
   },
   tabIcon: {
-    fontSize: 16,
-    marginRight: 6,
+    fontSize: 14,
+    marginRight: 8,
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    color: '#666',
+    color: COLORS.neutral.text.secondary,
   },
   activeTabText: {
-    color: '#1e3c72',
-    fontWeight: 'bold',
+    color: COLORS.neutral.white,
+    fontWeight: '600',
   },
   listContent: {
-    padding: 12,
+    padding: 16,
     paddingBottom: 80,
   },
   postCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    marginBottom: 12,
+    backgroundColor: COLORS.neutral.card,
+    borderRadius: 20,
+    marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    ...COLORS.shadow.medium,
   },
   waterLeakBadge: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
     position: 'absolute',
-    top: 8,
-    left: 8,
+    top: 12,
+    left: 12,
     zIndex: 10,
-    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
   waterLeakBadgeText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: 'bold',
+    color: COLORS.neutral.white,
+    fontSize: 10,
+    fontWeight: '700',
   },
   postImage: {
     width: '100%',
-    height: 160,
+    height: 200,
     resizeMode: 'cover',
   },
   postContent: {
-    padding: 12,
+    padding: 16,
   },
   postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 6,
   },
   categoryIcon: {
-    fontSize: 14,
-    marginRight: 6,
+    fontSize: 16,
   },
   postTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.neutral.text.primary,
     flex: 1,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginLeft: 8,
   },
   statusText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.neutral.white,
   },
   postDescription: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-    marginBottom: 8,
+    fontSize: 14,
+    color: COLORS.neutral.text.secondary,
+    lineHeight: 20,
+    marginBottom: 12,
   },
   postFooter: {
     flexDirection: 'row',
@@ -487,85 +461,86 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   userName: {
-    fontSize: 11,
-    color: '#888',
+    fontSize: 12,
+    color: COLORS.neutral.text.muted,
   },
   postDate: {
-    fontSize: 10,
-    color: '#aaa',
+    fontSize: 11,
+    color: COLORS.neutral.text.muted,
   },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   likeButton: {
-    padding: 4,
-    paddingHorizontal: 8,
-    borderRadius: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#FFF0F0',
+    gap: 6,
   },
   likedButton: {
-    backgroundColor: '#dc3545',
+    backgroundColor: COLORS.categories.safety,
   },
   likeText: {
-    fontSize: 11,
-    color: '#dc3545',
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.categories.safety,
   },
   likedButtonText: {
-    color: '#fff',
+    color: COLORS.neutral.white,
   },
   commentText: {
-    fontSize: 11,
-    color: '#17a2b8',
+    fontSize: 12,
+    fontWeight: '500',
+    color: COLORS.primary.light,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
   },
   emptyIcon: {
-    fontSize: 50,
-    marginBottom: 12,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 6,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#999',
-    textAlign: 'center',
+    fontSize: 64,
     marginBottom: 16,
   },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.neutral.text.primary,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: COLORS.neutral.text.muted,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
   emptyButton: {
-    backgroundColor: '#1e3c72',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 30,
   },
   emptyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 13,
+    color: COLORS.neutral.white,
+    fontWeight: '600',
+    fontSize: 14,
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 55,
-    height: 55,
-    borderRadius: 28,
+    bottom: 24,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    ...COLORS.shadow.medium,
   },
   fabGradient: {
     flex: 1,
@@ -573,8 +548,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fabText: {
-    color: '#fff',
-    fontSize: 26,
-    fontWeight: 'bold',
+    color: COLORS.neutral.white,
+    fontSize: 28,
+    fontWeight: '700',
   },
 });

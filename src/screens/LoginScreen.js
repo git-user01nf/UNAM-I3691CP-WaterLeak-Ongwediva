@@ -1,3 +1,4 @@
+// LoginScreen.js - Updated with new colors
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -6,6 +7,7 @@ import {
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS } from '../utils/colors';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -33,11 +35,14 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+    <LinearGradient colors={COLORS.primary.gradient} style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
         <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoEmoji}>💧</Text>
+          </View>
           <Text style={styles.title}>Fix-Flow</Text>
-          <Text style={styles.subtitle}>Infrastructure Reporter</Text>
+          <Text style={styles.subtitle}>Water Leak & Infrastructure Reporter</Text>
         </View>
 
         <View style={styles.card}>
@@ -46,7 +51,7 @@ export default function LoginScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor="#999"
+            placeholderTextColor={COLORS.neutral.text.muted}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -56,14 +61,14 @@ export default function LoginScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor="#999"
+            placeholderTextColor={COLORS.neutral.text.muted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
 
           <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+            {loading ? <ActivityIndicator color={COLORS.neutral.white} /> : <Text style={styles.buttonText}>Login</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -77,13 +82,76 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { alignItems: 'center', marginTop: 100, marginBottom: 50 },
-  title: { fontSize: 32, fontWeight: 'bold', color: '#fff' },
-  subtitle: { fontSize: 16, color: '#fff', opacity: 0.9, marginTop: 5 },
-  card: { backgroundColor: '#fff', margin: 20, padding: 25, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 },
-  cardTitle: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20, color: '#1e3c72' },
-  input: { backgroundColor: '#f5f5f5', borderRadius: 12, padding: 15, marginBottom: 15, fontSize: 16, borderWidth: 1, borderColor: '#e0e0e0' },
-  button: { backgroundColor: '#1e3c72', borderRadius: 12, padding: 15, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  linkText: { textAlign: 'center', marginTop: 20, color: '#1e3c72', fontSize: 14, fontWeight: '600' },
+  header: { 
+    alignItems: 'center', 
+    marginTop: 80, 
+    marginBottom: 40 
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoEmoji: {
+    fontSize: 40,
+  },
+  title: { 
+    fontSize: 34, 
+    fontWeight: '700', 
+    color: COLORS.neutral.white,
+    letterSpacing: -0.5,
+  },
+  subtitle: { 
+    fontSize: 14, 
+    color: COLORS.neutral.text.muted, 
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  card: { 
+    backgroundColor: COLORS.neutral.white, 
+    marginHorizontal: 20, 
+    padding: 24, 
+    borderRadius: 32, 
+    ...COLORS.shadow.medium 
+  },
+  cardTitle: { 
+    fontSize: 24, 
+    fontWeight: '700', 
+    textAlign: 'center', 
+    marginBottom: 24, 
+    color: COLORS.primary.main 
+  },
+  input: { 
+    backgroundColor: '#F1F5F9', 
+    borderRadius: 16, 
+    padding: 16, 
+    marginBottom: 16, 
+    fontSize: 16,
+    color: COLORS.neutral.text.primary,
+    borderWidth: 1,
+    borderColor: COLORS.neutral.border,
+  },
+  button: { 
+    backgroundColor: COLORS.primary.main, 
+    borderRadius: 16, 
+    padding: 16, 
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonText: { 
+    color: COLORS.neutral.white, 
+    fontSize: 16, 
+    fontWeight: '600' 
+  },
+  linkText: { 
+    textAlign: 'center', 
+    marginTop: 20, 
+    color: COLORS.primary.main, 
+    fontSize: 14, 
+    fontWeight: '600' 
+  },
 });

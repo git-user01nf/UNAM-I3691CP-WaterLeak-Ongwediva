@@ -1,3 +1,4 @@
+// ReportScreen.js - Updated with new colors
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -9,24 +10,14 @@ import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore
 import { auth, db } from '../services/firebase';
 import { uploadToCloudinary, uploadVideoToCloudinary, uploadAudioToCloudinary } from '../services/cloudinary';
 import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, CATEGORIES, getCategoryColor } from '../utils/colors';
 
-// Cloudinary configuration
+// Cloudinary configuration (MOVE TO .env)
 const CLOUD_NAME = 'dlbjuvumj';
 const UPLOAD_PRESET = 'ongwediva_reports';
 
-// Categories for selection
-const CATEGORIES = [
-  { id: 'water', name: '💧 Water Leaks', icon: '💧', color: '#2196F3' },
-  { id: 'roads', name: '🛣️ Roads', icon: '🛣️', color: '#9C27B0' },
-  { id: 'sanitation', name: '🗑️ Sanitation', icon: '🗑️', color: '#4CAF50' },
-  { id: 'safety', name: '🛡️ Safety', icon: '🛡️', color: '#F44336' },
-  { id: 'environment', name: '🌿 Environment', icon: '🌿', color: '#8BC34A' }
-];
-
-// Function to send push notifications to all users
 const sendPushNotificationToAllUsers = async (title, body, reportData) => {
   try {
-    // Get all users who have push tokens
     const usersSnapshot = await getDocs(collection(db, 'users'));
     const tokens = [];
     
@@ -44,7 +35,6 @@ const sendPushNotificationToAllUsers = async (title, body, reportData) => {
     
     console.log(`Sending notifications to ${tokens.length} users`);
     
-    // Send notifications using Expo's push service
     const messages = tokens.map(token => ({
       to: token,
       sound: 'default',
@@ -57,7 +47,6 @@ const sendPushNotificationToAllUsers = async (title, body, reportData) => {
       }
     }));
     
-    // Send notifications in batches to avoid rate limiting
     for (let i = 0; i < messages.length; i += 100) {
       const batch = messages.slice(i, i + 100);
       await Promise.all(batch.map(async (message) => {
@@ -100,7 +89,6 @@ export default function ReportScreen({ navigation, route }) {
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  // Image functions
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -138,7 +126,6 @@ export default function ReportScreen({ navigation, route }) {
     }
   };
 
-  // Video functions
   const pickVideo = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -175,7 +162,6 @@ export default function ReportScreen({ navigation, route }) {
     }
   };
 
-  // Voice recording functions
   const startRecording = async () => {
     try {
       const permission = await Audio.requestPermissionsAsync();
@@ -259,7 +245,6 @@ export default function ReportScreen({ navigation, route }) {
 
       const docRef = await addDoc(collection(db, 'reports'), reportData);
       
-      // Get category icon for notification
       const categoryIcon = {
         'water': '💧',
         'roads': '🛣️',
@@ -268,7 +253,6 @@ export default function ReportScreen({ navigation, route }) {
         'environment': '🌿'
       }[selectedCategory] || '📋';
       
-      // Send push notifications to all users
       await sendPushNotificationToAllUsers(
         `${categoryIcon} New ${selectedCategory} Report`,
         `${title} - by ${user.displayName || user.email.split('@')[0]}`,
@@ -285,13 +269,8 @@ export default function ReportScreen({ navigation, route }) {
     }
   };
 
-  const getCategoryColor = (id) => {
-    const cat = CATEGORIES.find(c => c.id === id);
-    return cat ? cat.color : '#2196F3';
-  };
-
   return (
-    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+    <LinearGradient colors={COLORS.primary.gradient} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
           <Text style={styles.backText}>← Back</Text>
@@ -304,7 +283,7 @@ export default function ReportScreen({ navigation, route }) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Select Category *</Text>
             <View style={styles.categorySelector}>
-              {CATEGORIES.map((cat) => (
+              {CATEGORIES.filter(c => c.id !== 'all' && c.id !== 'announcements').map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[
@@ -331,7 +310,7 @@ export default function ReportScreen({ navigation, route }) {
             <TextInput
               style={styles.input}
               placeholder="Enter issue title"
-              placeholderTextColor="#999"
+              placeholderTextColor={COLORS.neutral.text.muted}
               value={title}
               onChangeText={setTitle}
             />
@@ -343,7 +322,7 @@ export default function ReportScreen({ navigation, route }) {
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Describe the issue in detail"
-              placeholderTextColor="#999"
+              placeholderTextColor={COLORS.neutral.text.muted}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -357,7 +336,7 @@ export default function ReportScreen({ navigation, route }) {
             <TextInput
               style={styles.input}
               placeholder="Enter specific location"
-              placeholderTextColor="#999"
+              placeholderTextColor={COLORS.neutral.text.muted}
               value={location}
               onChangeText={setLocation}
             />
@@ -439,7 +418,7 @@ export default function ReportScreen({ navigation, route }) {
             disabled={uploading}
           >
             {uploading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={COLORS.neutral.white} />
             ) : (
               <Text style={styles.submitText}>Submit Report</Text>
             )}
@@ -452,29 +431,122 @@ export default function ReportScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { flexGrow: 1, padding: 20 },
-  back: { marginBottom: 15, padding: 5 },
-  backText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
-  cardTitle: { fontSize: 22, fontWeight: 'bold', color: '#1e3c72', textAlign: 'center', marginBottom: 20 },
-  inputGroup: { marginBottom: 18 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 },
-  categorySelector: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  categoryOption: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 30, backgroundColor: '#f0f0f0', gap: 6 },
+  scroll: { flexGrow: 1, padding: 20, paddingBottom: 40 },
+  back: { marginBottom: 16, padding: 4 },
+  backText: { color: COLORS.neutral.white, fontSize: 16, fontWeight: '600' },
+  card: { 
+    backgroundColor: COLORS.neutral.white, 
+    borderRadius: 28, 
+    padding: 24, 
+    ...COLORS.shadow.medium 
+  },
+  cardTitle: { 
+    fontSize: 24, 
+    fontWeight: '700', 
+    color: COLORS.primary.main, 
+    textAlign: 'center', 
+    marginBottom: 24 
+  },
+  inputGroup: { marginBottom: 20 },
+  label: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: COLORS.neutral.text.secondary, 
+    marginBottom: 8 
+  },
+  categorySelector: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 10 
+  },
+  categoryOption: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingVertical: 12, 
+    borderRadius: 30, 
+    backgroundColor: '#F1F5F9', 
+    gap: 8 
+  },
   categoryOptionIcon: { fontSize: 16 },
-  categoryOptionText: { fontSize: 13, color: '#333', fontWeight: '500' },
-  categoryOptionTextSelected: { color: '#fff', fontWeight: 'bold' },
-  input: { backgroundColor: '#f5f5f5', borderRadius: 12, padding: 14, fontSize: 15, color: '#333', borderWidth: 1, borderColor: '#e0e0e0' },
-  textArea: { height: 100, textAlignVertical: 'top' },
-  imageButtons: { flexDirection: 'row', gap: 12, marginTop: 5 },
-  imageButton: { backgroundColor: '#6c757d', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, flex: 1, alignItems: 'center' },
-  imageButtonText: { color: '#fff', fontSize: 14, fontWeight: '500' },
-  recordingButton: { backgroundColor: '#dc3545' },
-  imagePreview: { alignItems: 'center', marginTop: 15 },
-  previewImage: { width: '100%', height: 200, borderRadius: 12, marginBottom: 10 },
-  removeImage: { backgroundColor: '#dc3545', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8 },
-  removeImageText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  mediaText: { fontSize: 14, color: '#333', marginBottom: 8 },
-  submitButton: { paddingVertical: 15, borderRadius: 12, alignItems: 'center', marginTop: 10 },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+  categoryOptionText: { 
+    fontSize: 14, 
+    fontWeight: '500', 
+    color: COLORS.neutral.text.secondary 
+  },
+  categoryOptionTextSelected: { 
+    color: COLORS.neutral.white, 
+    fontWeight: '600' 
+  },
+  input: { 
+    backgroundColor: '#F1F5F9', 
+    borderRadius: 16, 
+    padding: 16, 
+    fontSize: 16, 
+    color: COLORS.neutral.text.primary, 
+    borderWidth: 1, 
+    borderColor: COLORS.neutral.border 
+  },
+  textArea: { 
+    height: 100, 
+    textAlignVertical: 'top' 
+  },
+  imageButtons: { 
+    flexDirection: 'row', 
+    gap: 12, 
+    marginTop: 6 
+  },
+  imageButton: { 
+    backgroundColor: COLORS.neutral.text.muted, 
+    paddingVertical: 12, 
+    paddingHorizontal: 20, 
+    borderRadius: 16, 
+    flex: 1, 
+    alignItems: 'center' 
+  },
+  imageButtonText: { 
+    color: COLORS.neutral.white, 
+    fontSize: 14, 
+    fontWeight: '500' 
+  },
+  recordingButton: { 
+    backgroundColor: COLORS.categories.safety 
+  },
+  imagePreview: { 
+    alignItems: 'center', 
+    marginTop: 16 
+  },
+  previewImage: { 
+    width: '100%', 
+    height: 200, 
+    borderRadius: 16, 
+    marginBottom: 12 
+  },
+  removeImage: { 
+    backgroundColor: COLORS.categories.safety, 
+    paddingVertical: 8, 
+    paddingHorizontal: 20, 
+    borderRadius: 20 
+  },
+  removeImageText: { 
+    color: COLORS.neutral.white, 
+    fontSize: 12, 
+    fontWeight: '600' 
+  },
+  mediaText: { 
+    fontSize: 14, 
+    color: COLORS.neutral.text.secondary, 
+    marginBottom: 8 
+  },
+  submitButton: { 
+    paddingVertical: 16, 
+    borderRadius: 20, 
+    alignItems: 'center', 
+    marginTop: 16 
+  },
+  submitText: { 
+    color: COLORS.neutral.white, 
+    fontSize: 16, 
+    fontWeight: '600' 
+  }
 });
