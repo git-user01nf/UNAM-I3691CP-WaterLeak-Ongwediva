@@ -158,3 +158,19 @@ export default function AdminPanelScreen({ navigation }) {
       ]
     );
   };
+
+  const openEditModal = (post) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setEditDescription(post.description);
+    setEditStatus(post.status || 'pending');
+    setEditModalVisible(true);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'in_progress': return '#ffc107';
+      case 'resolved': return '#28a745';
+      default: return '#dc3545';
+    }
+  };
