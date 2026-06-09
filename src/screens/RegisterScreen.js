@@ -1,121 +1,297 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Alert, ActivityIndicator, ScrollView
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView,
+  Platform, ScrollView
 } from 'react-native';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
-import { LinearGradient } from 'expo-linear-gradient';
+import { registerWithEmail } from '../services/firebase';
+
+const getPasswordStrength = (password) => {
+  if (password.length === 0) return null;
+  if (password.length < 6) return { label: 'Too Short', color: '#e74c3c', width: '20%' };
+  if (password.length < 8) return { label: 'Weak', color: '#e67e22', width: '40%' };
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const score = [hasUpper, hasNumber, hasSpecial].filter(Boolean).length;
+  if (score === 0) return { label: 'Weak', color: '#e67e22', width: '40%' };
+  if (score === 1) return { label: 'Fair', color: '#f1c40f', width: '60%' };
+  if (score === 2) return { label: 'Good', color: '#2ecc71', width: '80%' };
+  return { label: 'Strong', color: '#27ae60', width: '100%' };
+};
 
 export default function RegisterScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const strength = getPasswordStrength(password);
 
   const handleRegister = async () => {
-    if (!username || !email || !password) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!username || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
     if (password.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
-
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      await updateProfile(user, { displayName: username });
-      
-      await setDoc(doc(db, 'users', user.uid), {
-        username,
-        email,
-        phone,
-        createdAt: serverTimestamp(),
-        isAdmin: false,
-        role: 'resident'
-      });
-      
-      Alert.alert('Success', 'Registration successful!', [
-        { text: 'OK', onPress: () => navigation.replace('Login') }
+      await registerWithEmail(email.trim(), password);
+      Alert.alert('Success', 'Account created successfully. Please log in.', [
+        { text: 'OK', onPress: () => navigation.navigate('LoginScreen') }
       ]);
     } catch (error) {
-      console.error('Registration error:', error.code, error.message);
-      Alert.alert('Registration Failed', error.message);
+      const message =
+        error.code === 'auth/email-already-in-use' ? 'That email is already registered.' :
+        error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
+        error.code === 'auth/weak-password' ? 'Password should be at least 6 characters.' :
+        'Unable to create account. Please try again.';
+      Alert.alert('Registration Failed', message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join Ongwediva Community</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.topSection}>
+          <Text style={styles.appName}>Fix-Flow</Text>
+          <Text style={styles.appTagline}>Infrastructure Reporter</Text>
         </View>
 
         <View style={styles.card}>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join us to report and track infrastructure issues.</Text>
+
           <TextInput
             style={styles.input}
             placeholder="Username"
+            placeholderTextColor="#aaa"
+            autoCapitalize="none"
             value={username}
             onChangeText={setUsername}
           />
-          
+
           <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor="#aaa"
+            keyboardType="email-address"
+            autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Password (min 6 chars)"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Phone (optional)"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {strength && (
+            <View style={styles.strengthContainer}>
+              <View style={styles.strengthBar}>
+                <View style={[styles.strengthFill, { width: strength.width, backgroundColor: strength.color }]} />
+              </View>
+              <Text style={[styles.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
+            </View>
+          )}
+
+          <View style={[styles.passwordWrapper, { marginTop: 10 }]}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm Password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <Text style={styles.eyeIcon}>{showConfirmPassword ? '🙈' : '👁️'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {confirmPassword.length > 0 && (
+            <Text style={[styles.matchText, { color: password === confirmPassword ? '#27ae60' : '#e74c3c' }]}>
+              {password === confirmPassword ? '✓ Passwords match' : '✕ Passwords do not match'}
+            </Text>
+          )}
+
+          <TouchableOpacity
+            style={[styles.registerBtn, loading && { opacity: 0.7 }]}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.registerBtnText}>Create Account</Text>
+            }
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>Already have an account? Login →</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
+            <Text style={styles.loginText}>
+              Already have an account? <Text style={styles.loginLink}>Login</Text>
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </LinearGradient>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  header: { alignItems: 'center', marginBottom: 30 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff' },
-  subtitle: { fontSize: 14, color: '#fff', opacity: 0.9, marginTop: 5 },
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 25 },
-  input: { backgroundColor: '#f5f5f5', borderRadius: 12, padding: 15, marginBottom: 15, fontSize: 16, borderWidth: 1, borderColor: '#e0e0e0' },
-  button: { backgroundColor: '#1e3c72', borderRadius: 12, padding: 15, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  linkText: { textAlign: 'center', marginTop: 20, color: '#1e3c72', fontSize: 14, fontWeight: '600' },
+  container: {
+    flex: 1,
+    backgroundColor: '#1a3a6b',
+  },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  topSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  appName: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  appTagline: {
+    fontSize: 14,
+    color: '#a0b4d0',
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 14,
+    backgroundColor: '#fafafa',
+  },
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    backgroundColor: '#fafafa',
+    marginBottom: 6,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#333',
+  },
+  eyeBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  eyeIcon: {
+    fontSize: 18,
+  },
+  strengthContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 8,
+  },
+  strengthBar: {
+    flex: 1,
+    height: 5,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  strengthFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  strengthLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    minWidth: 50,
+    textAlign: 'right',
+  },
+  matchText: {
+    fontSize: 12,
+    marginBottom: 10,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  registerBtn: {
+    backgroundColor: '#1a3a6b',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 10,
+  },
+  registerBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginText: {
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#888',
+  },
+  loginLink: {
+    color: '#1a3a6b',
+    fontWeight: '600',
+  },
 });
