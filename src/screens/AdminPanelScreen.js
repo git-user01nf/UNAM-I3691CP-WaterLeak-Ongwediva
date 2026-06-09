@@ -217,3 +217,81 @@ export default function AdminPanelScreen({ navigation }) {
       <Text style={styles.announcementMeta}>Posted by: {item.createdByName}</Text>
     </View>
   );
+
+  if (loading) {
+    return (
+      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+        <ActivityIndicator size="large" color="#fff" />
+      </LinearGradient>
+    );
+  }
+
+  return (
+    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🏛️ Town Council Admin Panel</Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity style={[styles.tab, activeTab === 'reports' && styles.activeTab]} onPress={() => setActiveTab('reports')}>
+          <Text style={styles.tabText}>📋 Reports ({reports.length})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === 'announcements' && styles.activeTab]} onPress={() => setActiveTab('announcements')}>
+          <Text style={styles.tabText}>📢 Announcements ({announcements.length})</Text>
+        </TouchableOpacity>
+      </View>
+      {activeTab === 'reports' ? (
+        <FlatList data={reports} renderItem={renderReport} keyExtractor={item => item.id} contentContainerStyle={styles.list} ListEmptyComponent={<Text style={styles.emptyText}>No reports yet</Text>} />
+      ) : (
+        <>
+          <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+            <Text style={styles.addButtonText}>➕ Create Announcement</Text>
+          </TouchableOpacity>
+          <FlatList data={announcements} renderItem={renderAnnouncement} keyExtractor={item => item.id} contentContainerStyle={styles.list} ListEmptyComponent={<Text style={styles.emptyText}>No announcements yet</Text>} />
+        </>
+      )}
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Create Announcement</Text>
+            <TextInput style={styles.modalInput} placeholder="Title" value={announcementTitle} onChangeText={setAnnouncementTitle} />
+            <TextInput style={[styles.modalInput, styles.modalTextArea]} placeholder="Announcement content" value={announcementContent} onChangeText={setAnnouncementContent} multiline numberOfLines={4} />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, styles.submitButton]} onPress={createAnnouncement}>
+                <Text style={styles.submitButtonText}>Post</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal animationType="slide" transparent={true} visible={editModalVisible} onRequestClose={() => setEditModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Post</Text>
+            <TextInput style={styles.modalInput} placeholder="Title" value={editTitle} onChangeText={setEditTitle} />
+            <TextInput style={[styles.modalInput, styles.modalTextArea]} placeholder="Description" value={editDescription} onChangeText={setEditDescription} multiline numberOfLines={4} />
+            <View style={styles.statusOptions}>
+              <Text style={styles.statusLabel}>Status:</Text>
+              <TouchableOpacity style={[styles.statusOption, editStatus === 'pending' && styles.statusOptionActive]} onPress={() => setEditStatus('pending')}><Text>🟡 Pending</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.statusOption, editStatus === 'in_progress' && styles.statusOptionActive]} onPress={() => setEditStatus('in_progress')}><Text>🔵 In Progress</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.statusOption, editStatus === 'resolved' && styles.statusOptionActive]} onPress={() => setEditStatus('resolved')}><Text>🟢 Resolved</Text></TouchableOpacity>
+            </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, styles.submitButton]} onPress={editPost}>
+                <Text style={styles.submitButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </LinearGradient>
+  );
+}
