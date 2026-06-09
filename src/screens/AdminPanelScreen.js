@@ -204,3 +204,16 @@ export default function AdminPanelScreen({ navigation }) {
       </View>
     </View>
   );
+
+  const renderAnnouncement = ({ item }) => (
+    <View style={styles.announcementCard}>
+      <View style={styles.announcementHeader}>
+        <Text style={styles.announcementTitle}>{item.title}</Text>
+        <TouchableOpacity onPress={() => deleteAnnouncement(item.id)}>
+          <Text style={styles.deleteAnnouncement}>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.announcementContent}>{item.content}</Text>
+      <Text style={styles.announcementMeta}>Posted by: {item.createdByName}</Text>
+    </View>
+  );
