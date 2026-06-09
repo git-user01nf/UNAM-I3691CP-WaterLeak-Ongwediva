@@ -88,3 +88,28 @@ export default function AdminPanelScreen({ navigation }) {
       ]
     );
   };
+
+  const editPost = async () => {
+    if (!editingPost) return;
+    try {
+      await updateDoc(doc(db, 'reports', editingPost.id), {
+        title: editTitle,
+        description: editDescription,
+        status: editStatus,
+        updatedAt: serverTimestamp(),
+        editedBy: 'admin'
+      });
+      await addDoc(collection(db, 'reports', editingPost.id, 'comments'), {
+        userId: auth.currentUser.uid,
+        username: '🏛️ Town Council Admin',
+        comment: `📝 Post has been edited by administrator. New status: ${editStatus}`,
+        createdAt: serverTimestamp(),
+        isAuto: true
+      });
+      Alert.alert('Success', 'Post updated!');
+      setEditModalVisible(false);
+      setEditingPost(null);
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
