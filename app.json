@@ -1,1 +1,10 @@
-{"expo":{"name":"ongwedivafinal","slug":"ongwedivafinal","version":"1.0.0"}} 
+{
+  "expo": {
+    "name": "ongwedivafinal",
+    "slug": "ongwedivafinal",
+    "version": "1.0.0",
+    "plugins": [
+      "expo-status-bar"
+    ]
+  }
+}

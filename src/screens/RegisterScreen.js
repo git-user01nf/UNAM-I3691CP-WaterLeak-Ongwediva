@@ -1,101 +1,196 @@
-<<<<<<< HEAD
-import React, {useState} from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView} from 'react-native';
-
-// Simple Register Screen (Admin Panel - Register)
-export default function AdminPanelScreen({navigation}) {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirm, setConfirm] = useState('');
-
-    const validateEmail = (em) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
-    };
-
-    const onRegister = () => {
-        if (!name.trim() || !email.trim() || !password) {
-            return Alert.alert('Validation', 'Please fill all required fields');
-        }
-        if (!validateEmail(email)) {
-            return Alert.alert('Validation', 'Please enter a valid email');
-        }
-        if (password.length < 6) {
-            return Alert.alert('Validation', 'Password must be at least 6 characters');
-        }
-        if (password !== confirm) {
-            return Alert.alert('Validation', 'Passwords do not match');
-        }
-
-        // Placeholder: replace with API call or navigation logic
-        Alert.alert('Success', `Registered ${name} (${email})`);
-        // navigation.goBack();
-    };
-
-    return (
-        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
-                <Text style={styles.title}>Register Admin</Text>
-
-                <TextInput placeholder="Full name" value={name} onChangeText={setName} style={styles.input} autoCapitalize="words" />
-                <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" autoCapitalize="none" />
-                <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
-                <TextInput placeholder="Confirm Password" value={confirm} onChangeText={setConfirm} style={styles.input} secureTextEntry />
-
-                <TouchableOpacity style={styles.button} onPress={onRegister}>
-                    <Text style={styles.buttonText}>Register</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => navigation && navigation.goBack()} style={styles.link}>
-                    <Text style={styles.linkText}>Back to Login</Text>
-                </TouchableOpacity>
-            </ScrollView>
-        </KeyboardAvoidingView>
-    );
-}
-
-const styles = StyleSheet.create({
-    container: {flex: 1, backgroundColor: '#fff'},
-    inner: {padding: 24, alignItems: 'stretch', justifyContent: 'center', flexGrow: 1},
-    title: {fontSize: 24, fontWeight: '600', marginBottom: 24, textAlign: 'center'},
-    input: {borderWidth: 1, borderColor: '#ccc', padding: 12, borderRadius: 6, marginBottom: 12},
-    button: {backgroundColor: '#007bff', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 8},
-    buttonText: {color: '#fff', fontWeight: '600'},
-    link: {marginTop: 16, alignItems: 'center'},
-    linkText: {color: '#007bff'},
-=======
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView,
+  Platform, ScrollView
+} from 'react-native';
+import { registerWithEmail } from '../services/firebase';
 
 export default function RegisterScreen({ navigation }) {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    if (!name || !email || !password) return alert('Fill all fields');
-    alert('Account created successfully');
-    navigation.navigate('LoginScreen');
+  const handleRegister = async () => {
+    if (!username || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+    setLoading(true);
+    try {
+      await registerWithEmail(email.trim(), password);
+      Alert.alert('Success', 'Account created successfully. Please log in.', [
+        { text: 'OK', onPress: () => navigation.navigate('LoginScreen') }
+      ]);
+    } catch (error) {
+      const message =
+        error.code === 'auth/email-already-in-use' ? 'That email is already registered.' :
+        error.code === 'auth/invalid-email' ? 'Please enter a valid email address.' :
+        error.code === 'auth/weak-password' ? 'Password should be at least 6 characters.' :
+        'Unable to create account. Please try again.';
+      Alert.alert('Registration Failed', message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
-      <TextInput placeholder="Full Name" style={styles.input} onChangeText={setName} />
-      <TextInput placeholder="Email" style={styles.input} onChangeText={setEmail} />
-      <TextInput placeholder="Password" secureTextEntry style={styles.input} onChangeText={setPassword} />
-      <TouchableOpacity style={styles.btn} onPress={handleRegister}>
-        <Text style={styles.btnText}>Register</Text>
-      </TouchableOpacity>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.topSection}>
+          <Text style={styles.appName}>Fix-Flow</Text>
+          <Text style={styles.appTagline}>Infrastructure Reporter</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join us to report and track infrastructure issues.</Text>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            placeholderTextColor="#aaa"
+            autoCapitalize="none"
+            value={username}
+            onChangeText={setUsername}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#aaa"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+
+          <TouchableOpacity
+            style={[styles.registerBtn, loading && { opacity: 0.7 }]}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.registerBtnText}>Create Account</Text>
+            }
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
+            <Text style={styles.loginText}>
+              Already have an account? <Text style={styles.loginLink}>Login</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:{ flex:1, justifyContent:'center', padding:20 },
-  title:{ fontSize:28, fontWeight:'bold', marginBottom:20 },
-  input:{ borderWidth:1, padding:12, marginBottom:12, borderRadius:8 },
-  btn:{ backgroundColor:'#007bff', padding:15, borderRadius:8 },
-  btnText:{ color:'#fff', textAlign:'center', fontWeight:'bold' }
->>>>>>> 96d5980ddfc9b22c2fd5108ac0c852dd9b4dd083
+  container: {
+    flex: 1,
+    backgroundColor: '#1a3a6b',
+  },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  topSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  appName: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  appTagline: {
+    fontSize: 14,
+    color: '#a0b4d0',
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 14,
+    backgroundColor: '#fafafa',
+  },
+  registerBtn: {
+    backgroundColor: '#1a3a6b',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 4,
+  },
+  registerBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginText: {
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#888',
+  },
+  loginLink: {
+    color: '#1a3a6b',
+    fontWeight: '600',
+  },
 });
