@@ -21,3 +21,14 @@ export default function AdminPanelScreen({ navigation }) {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editStatus, setEditStatus] = useState('');
+
+  useEffect(() => {
+    // Listen to reports
+    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+    const unsubscribeReports = onSnapshot(q, (snapshot) => {
+      const reportsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setReports(reportsData);
+    });
