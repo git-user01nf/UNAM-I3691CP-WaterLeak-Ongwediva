@@ -32,3 +32,20 @@ export default function AdminPanelScreen({ navigation }) {
       }));
       setReports(reportsData);
     });
+
+    // Listen to announcements
+    const announcementsQuery = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+    const unsubscribeAnnouncements = onSnapshot(announcementsQuery, (snapshot) => {
+      const announcementsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setAnnouncements(announcementsData);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribeReports();
+      unsubscribeAnnouncements();
+    };
+  }, []);
