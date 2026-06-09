@@ -7,3 +7,17 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addD
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
+
+export default function AdminPanelScreen({ navigation }) {
+  const [reports, setReports] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [activeTab, setActiveTab] = useState('reports');
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementContent, setAnnouncementContent] = useState('');
+  const [editingPost, setEditingPost] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState('');
