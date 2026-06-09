@@ -1,157 +1,180 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert
+  View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator
 } from 'react-native';
-import * as Location from 'expo-location';
-
-const ONGWEDIVA_LAT = -17.7833;
-const ONGWEDIVA_LNG = 15.7667;
-const MAX_DISTANCE_KM = 15;
-
-function getDistanceKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+import { LinearGradient } from 'expo-linear-gradient';
+import { isWithinOngwediva, MAX_DISTANCE_KM, ONGWEDIVA_COORDINATES } from '../services/locationService';
 
 export default function VerifyLocationScreen({ navigation }) {
-  const [status, setStatus] = useState('checking'); // checking | verified | failed | denied
+  const [verifying, setVerifying] = useState(true);
+  const [verified, setVerified] = useState(false);
+  const [distance, setDistance] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    checkLocation();
+    verifyLocation();
   }, []);
 
-  const checkLocation = async () => {
-    setStatus('checking');
+  const verifyLocation = async () => {
+    setVerifying(true);
+    setError(null);
+    
     try {
-      const { status: permStatus } = await Location.requestForegroundPermissionsAsync();
-      if (permStatus !== 'granted') {
-        setStatus('denied');
-        return;
-      }
-      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      const { latitude, longitude } = location.coords;
-      const distance = getDistanceKm(latitude, longitude, ONGWEDIVA_LAT, ONGWEDIVA_LNG);
-      if (distance <= MAX_DISTANCE_KM) {
-        setStatus('verified');
-        setTimeout(() => navigation.replace('HomeScreen'), 2000);
+      const isValid = await isWithinOngwediva();
+      
+      if (isValid) {
+        setVerified(true);
+        setVerifying(false);
+        // Auto proceed after 2 seconds
+        setTimeout(() => {
+          navigation.replace('Home');
+        }, 2000);
       } else {
-        setStatus('failed');
+        setVerified(false);
+        setVerifying(false);
       }
-    } catch (error) {
-      setStatus('failed');
+    } catch (err) {
+      setError(err.message);
+      setVerifying(false);
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {status === 'checking' && (
-        <>
+  if (verifying) {
+    return (
+      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+        <View style={styles.content}>
           <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.title}>Verifying your location...</Text>
-          <Text style={styles.subtitle}>Please wait while we check you are within Ongwediva.</Text>
-        </>
-      )}
+          <Text style={styles.title}>Verifying Location...</Text>
+          <Text style={styles.message}>Please wait while we verify your location</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
 
-      {status === 'verified' && (
-        <>
-          <View style={styles.iconCircle}>
-            <Text style={styles.iconText}>✓</Text>
+  if (verified) {
+    return (
+      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.successIcon}>
+            <Text style={styles.iconText}>✅</Text>
           </View>
-          <Text style={styles.title}>Location Verified!</Text>
-          <Text style={styles.subtitle}>You are within Ongwediva. Redirecting...</Text>
-        </>
-      )}
+          <Text style={styles.successTitle}>Location Verified!</Text>
+          <Text style={styles.message}>You are within Ongwediva. Redirecting...</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
 
-      {status === 'failed' && (
-        <>
-          <View style={[styles.iconCircle, styles.iconFailed]}>
-            <Text style={styles.iconText}>✕</Text>
-          </View>
-          <Text style={styles.title}>Outside Service Area</Text>
-          <Text style={styles.subtitle}>
-            You must be within 15 km of Ongwediva to submit reports.
-          </Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={checkLocation}>
-            <Text style={styles.retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      {status === 'denied' && (
-        <>
-          <View style={[styles.iconCircle, styles.iconFailed]}>
-            <Text style={styles.iconText}>!</Text>
-          </View>
-          <Text style={styles.title}>Location Access Denied</Text>
-          <Text style={styles.subtitle}>
-            Please enable location permissions in your device settings to use this app.
-          </Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={checkLocation}>
-            <Text style={styles.retryText}>Try Again</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </View>
+  return (
+    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.errorIcon}>
+          <Text style={styles.iconText}>📍</Text>
+        </View>
+        <Text style={styles.errorTitle}>Location Not Verified</Text>
+        <Text style={styles.message}>
+          You must be within {MAX_DISTANCE_KM}km of Ongwediva to use this app.
+        </Text>
+        <Text style={styles.coordinates}>
+          Ongwediva coordinates: {ONGWEDIVA_COORDINATES.latitude}, {ONGWEDIVA_COORDINATES.longitude}
+        </Text>
+        <Text style={styles.radius}>
+          Maximum distance allowed: {MAX_DISTANCE_KM}km
+        </Text>
+        {error && <Text style={styles.errorText}>{error}</Text>}
+        
+        <TouchableOpacity style={styles.retryButton} onPress={verifyLocation}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a3a6b',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 20,
   },
-  iconCircle: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 20,
+  },
+  successTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 20,
+  },
+  errorTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 20,
+  },
+  message: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 10,
+    opacity: 0.9,
+  },
+  coordinates: {
+    fontSize: 14,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 20,
+    opacity: 0.7,
+  },
+  radius: {
+    fontSize: 14,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 5,
+    opacity: 0.7,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  successIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#2ecc71',
+    backgroundColor: 'rgba(40,167,69,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
   },
-  iconFailed: {
-    backgroundColor: '#e74c3c',
+  errorIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(220,53,69,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   iconText: {
-    color: '#fff',
-    fontSize: 36,
-    fontWeight: 'bold',
+    fontSize: 40,
   },
-  title: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 12,
-    marginTop: 16,
-  },
-  subtitle: {
-    color: '#a0b4d0',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  retryBtn: {
-    marginTop: 28,
+  retryButton: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 32,
+    paddingHorizontal: 30,
     paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 30,
   },
-  retryText: {
-    color: '#1a3a6b',
-    fontSize: 15,
-    fontWeight: '600',
+  retryButtonText: {
+    color: '#1e3c72',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

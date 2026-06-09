@@ -1,10 +1,48 @@
 {
   "expo": {
-    "name": "ongwedivafinal",
-    "slug": "ongwedivafinal",
+    "name": "Fix-Flow",
+    "slug": "fixflow",
     "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3c72"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.fixflow.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e3c72"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
+      ]
+    },
     "plugins": [
-      "expo-status-bar"
+      "expo-av",
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Fix-Flow to verify your location."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Fix-Flow to take photos and videos."
+        }
+      ]
     ]
   }
 }

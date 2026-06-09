@@ -1,315 +1,440 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Alert, TextInput, ScrollView, Modal
+  Alert, ActivityIndicator, Modal, TextInput, ScrollView
 } from 'react-native';
-import {
-  getFirestore, collection, getDocs, orderBy, query,
-  updateDoc, doc, addDoc, serverTimestamp
-} from 'firebase/firestore';
-
-const STATUSES = ['Pending', 'In Progress', 'Resolved'];
-
-const STATUS_COLORS = {
-  Pending: { bg: '#fce4e4', text: '#c0392b' },
-  'In Progress': { bg: '#fff3cd', text: '#856404' },
-  Resolved: { bg: '#d4edda', text: '#155724' },
-};
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { auth, db } from '../services/firebase';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function AdminPanelScreen({ navigation }) {
-  const [tab, setTab] = useState('reports');
   const [reports, setReports] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [activeTab, setActiveTab] = useState('reports');
   const [loading, setLoading] = useState(true);
-  const [selectedReport, setSelectedReport] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [annTitle, setAnnTitle] = useState('');
-  const [annMessage, setAnnMessage] = useState('');
-  const [annPostedBy, setAnnPostedBy] = useState('');
-  const [posting, setPosting] = useState(false);
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementContent, setAnnouncementContent] = useState('');
+  const [editingPost, setEditingPost] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState('');
 
   useEffect(() => {
-    fetchReports();
+    // Listen to reports
+    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+    const unsubscribeReports = onSnapshot(q, (snapshot) => {
+      const reportsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setReports(reportsData);
+    });
+
+    // Listen to announcements
+    const announcementsQuery = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+    const unsubscribeAnnouncements = onSnapshot(announcementsQuery, (snapshot) => {
+      const announcementsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setAnnouncements(announcementsData);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribeReports();
+      unsubscribeAnnouncements();
+    };
   }, []);
 
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      const db = getFirestore();
-      const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setReports(data);
-    } catch {
-      setReports([]);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigation.replace('Login');
   };
 
-  const handleStatusChange = async (reportId, newStatus) => {
+  const updatePostStatus = async (postId, newStatus) => {
     try {
-      const db = getFirestore();
-      await updateDoc(doc(db, 'reports', reportId), { status: newStatus });
-      setReports(prev =>
-        prev.map(r => r.id === reportId ? { ...r, status: newStatus } : r)
-      );
-      setModalVisible(false);
-      Alert.alert('Updated', `Status changed to ${newStatus}`);
-    } catch {
-      Alert.alert('Error', 'Failed to update status.');
-    }
-  };
-
-  const handlePostAnnouncement = async () => {
-    if (!annTitle || !annMessage) {
-      Alert.alert('Error', 'Please fill in title and message.');
-      return;
-    }
-    setPosting(true);
-    try {
-      const db = getFirestore();
-      await addDoc(collection(db, 'announcements'), {
-        title: annTitle,
-        message: annMessage,
-        postedBy: annPostedBy || 'Town Council',
-        createdAt: serverTimestamp(),
+      await updateDoc(doc(db, 'reports', postId), {
+        status: newStatus,
+        updatedAt: serverTimestamp()
       });
-      Alert.alert('Success', 'Announcement posted!');
-      setAnnTitle('');
-      setAnnMessage('');
-      setAnnPostedBy('');
-    } catch {
-      Alert.alert('Error', 'Failed to post announcement.');
-    } finally {
-      setPosting(false);
+      Alert.alert('Success', 'Status updated!');
+    } catch (error) {
+      Alert.alert('Error', error.message);
     }
   };
 
-  const renderReport = ({ item }) => {
-    const statusStyle = STATUS_COLORS[item.status] || STATUS_COLORS['Pending'];
-    return (
-      <View style={styles.card}>
-        <View style={styles.cardTop}>
-          <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
-            <Text style={[styles.statusText, { color: statusStyle.text }]}>
-              {item.status || 'Pending'}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.cardCategory}>{item.category}</Text>
-        <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-        <Text style={styles.cardMeta}>👤 {item.username || 'Anonymous'}</Text>
-        <TouchableOpacity
-          style={styles.changeStatusBtn}
-          onPress={() => { setSelectedReport(item); setModalVisible(true); }}
-        >
-          <Text style={styles.changeStatusText}>Change Status</Text>
-        </TouchableOpacity>
-      </View>
+  const deletePost = async (postId) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'reports', postId));
+              Alert.alert('Success', 'Post deleted!');
+            } catch (error) {
+              Alert.alert('Error', error.message);
+            }
+          }
+        }
+      ]
     );
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backBtn}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Admin Panel</Text>
-        <View style={{ width: 60 }} />
-      </View>
+  const editPost = async () => {
+    if (!editingPost) return;
+    
+    try {
+      await updateDoc(doc(db, 'reports', editingPost.id), {
+        title: editTitle,
+        description: editDescription,
+        status: editStatus,
+        updatedAt: serverTimestamp(),
+        editedBy: 'admin'
+      });
+      
+      // Add admin comment about edit
+      await addDoc(collection(db, 'reports', editingPost.id, 'comments'), {
+        userId: auth.currentUser.uid,
+        username: '🏛️ Town Council Admin',
+        comment: `📝 Post has been edited by administrator. New status: ${editStatus}`,
+        createdAt: serverTimestamp(),
+        isAuto: true
+      });
+      
+      Alert.alert('Success', 'Post updated!');
+      setEditModalVisible(false);
+      setEditingPost(null);
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
 
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          style={[styles.tabBtn, tab === 'reports' && styles.tabBtnActive]}
-          onPress={() => setTab('reports')}
-        >
-          <Text style={[styles.tabBtnText, tab === 'reports' && styles.tabBtnTextActive]}>
-            Reports
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabBtn, tab === 'announcements' && styles.tabBtnActive]}
-          onPress={() => setTab('announcements')}
-        >
-          <Text style={[styles.tabBtnText, tab === 'announcements' && styles.tabBtnTextActive]}>
-            Post Announcement
-          </Text>
-        </TouchableOpacity>
-      </View>
+  const createAnnouncement = async () => {
+    if (!announcementTitle || !announcementContent) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
-      {tab === 'reports' ? (
-        loading ? (
-          <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#1a3a6b" />
-        ) : reports.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>📭</Text>
-            <Text style={styles.emptyTitle}>No reports yet</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={reports}
-            keyExtractor={item => item.id}
-            renderItem={renderReport}
-            contentContainerStyle={styles.list}
-            onRefresh={fetchReports}
-            refreshing={loading}
-          />
-        )
-      ) : (
-        <ScrollView contentContainerStyle={styles.annForm}>
-          <Text style={styles.label}>Title</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Announcement title"
-            placeholderTextColor="#aaa"
-            value={annTitle}
-            onChangeText={setAnnTitle}
-          />
+    try {
+      await addDoc(collection(db, 'announcements'), {
+        title: announcementTitle,
+        content: announcementContent,
+        createdBy: auth.currentUser.uid,
+        createdByName: auth.currentUser.displayName || 'Admin',
+        createdAt: serverTimestamp(),
+        isUrgent: false
+      });
+      
+      setAnnouncementTitle('');
+      setAnnouncementContent('');
+      setModalVisible(false);
+      Alert.alert('Success', 'Announcement posted!');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
 
-          <Text style={styles.label}>Message</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Write your announcement..."
-            placeholderTextColor="#aaa"
-            multiline
-            numberOfLines={5}
-            value={annMessage}
-            onChangeText={setAnnMessage}
-          />
-
-          <Text style={styles.label}>Posted By (optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Ongwediva Town Council"
-            placeholderTextColor="#aaa"
-            value={annPostedBy}
-            onChangeText={setAnnPostedBy}
-          />
-
-          <TouchableOpacity
-            style={[styles.postBtn, posting && { opacity: 0.7 }]}
-            onPress={handlePostAnnouncement}
-            disabled={posting}
-          >
-            {posting
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.postBtnText}>Post Announcement</Text>
+  const deleteAnnouncement = async (announcementId) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Delete this announcement?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'announcements', announcementId));
+              Alert.alert('Success', 'Announcement deleted!');
+            } catch (error) {
+              Alert.alert('Error', error.message);
             }
+          }
+        }
+      ]
+    );
+  };
+
+  const openEditModal = (post) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setEditDescription(post.description);
+    setEditStatus(post.status || 'pending');
+    setEditModalVisible(true);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'in_progress': return '#ffc107';
+      case 'resolved': return '#28a745';
+      default: return '#dc3545';
+    }
+  };
+
+  const renderReport = ({ item }) => (
+    <View style={styles.postCard}>
+      <View style={styles.postHeader}>
+        <Text style={styles.postTitle}>{item.title}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+          <Text style={styles.statusText}>{item.status || 'pending'}</Text>
+        </View>
+      </View>
+      <Text style={styles.postMeta}>By: {item.username}</Text>
+      <Text style={styles.postDescription} numberOfLines={2}>{item.description}</Text>
+      
+      <View style={styles.postActions}>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.statusButton]}
+          onPress={() => updatePostStatus(item.id, 'pending')}>
+          <Text style={styles.actionButtonText}>🟡 Pending</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.statusButton]}
+          onPress={() => updatePostStatus(item.id, 'in_progress')}>
+          <Text style={styles.actionButtonText}>🔵 In Progress</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.statusButton]}
+          onPress={() => updatePostStatus(item.id, 'resolved')}>
+          <Text style={styles.actionButtonText}>🟢 Resolved</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.editButton]}
+          onPress={() => openEditModal(item)}>
+          <Text style={styles.actionButtonText}>✏️ Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={() => deletePost(item.id)}>
+          <Text style={styles.actionButtonText}>🗑️ Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderAnnouncement = ({ item }) => (
+    <View style={styles.announcementCard}>
+      <View style={styles.announcementHeader}>
+        <Text style={styles.announcementTitle}>{item.title}</Text>
+        <TouchableOpacity onPress={() => deleteAnnouncement(item.id)}>
+          <Text style={styles.deleteAnnouncement}>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.announcementContent}>{item.content}</Text>
+      <Text style={styles.announcementMeta}>Posted by: {item.createdByName}</Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+        <ActivityIndicator size="large" color="#fff" />
+      </LinearGradient>
+    );
+  }
+
+  return (
+    <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🏛️ Town Council Admin Panel</Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'reports' && styles.activeTab]}
+          onPress={() => setActiveTab('reports')}>
+          <Text style={styles.tabText}>📋 Reports ({reports.length})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'announcements' && styles.activeTab]}
+          onPress={() => setActiveTab('announcements')}>
+          <Text style={styles.tabText}>📢 Announcements ({announcements.length})</Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'reports' ? (
+        <FlatList
+          data={reports}
+          renderItem={renderReport}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={<Text style={styles.emptyText}>No reports yet</Text>}
+        />
+      ) : (
+        <>
+          <TouchableOpacity 
+            style={styles.addButton}
+            onPress={() => setModalVisible(true)}>
+            <Text style={styles.addButtonText}>➕ Create Announcement</Text>
           </TouchableOpacity>
-        </ScrollView>
+          <FlatList
+            data={announcements}
+            renderItem={renderAnnouncement}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={<Text style={styles.emptyText}>No announcements yet</Text>}
+          />
+        </>
       )}
 
-      <Modal visible={modalVisible} transparent animationType="slide">
+      {/* Create Announcement Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Change Status</Text>
-            <Text style={styles.modalSubtitle} numberOfLines={1}>
-              {selectedReport?.title}
-            </Text>
-            {STATUSES.map(s => {
-              const sc = STATUS_COLORS[s];
-              return (
-                <TouchableOpacity
-                  key={s}
-                  style={[styles.statusOption, { backgroundColor: sc.bg }]}
-                  onPress={() => handleStatusChange(selectedReport.id, s)}
-                >
-                  <Text style={[styles.statusOptionText, { color: sc.text }]}>{s}</Text>
-                </TouchableOpacity>
-              );
-            })}
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Create Announcement</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Title"
+              value={announcementTitle}
+              onChangeText={setAnnouncementTitle}
+            />
+            <TextInput
+              style={[styles.modalInput, styles.modalTextArea]}
+              placeholder="Announcement content"
+              value={announcementContent}
+              onChangeText={setAnnouncementContent}
+              multiline
+              numberOfLines={4}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.submitButton]}
+                onPress={createAnnouncement}>
+                <Text style={styles.submitButtonText}>Post</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
-    </View>
+
+      {/* Edit Post Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Post</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Title"
+              value={editTitle}
+              onChangeText={setEditTitle}
+            />
+            <TextInput
+              style={[styles.modalInput, styles.modalTextArea]}
+              placeholder="Description"
+              value={editDescription}
+              onChangeText={setEditDescription}
+              multiline
+              numberOfLines={4}
+            />
+            <View style={styles.statusOptions}>
+              <Text style={styles.statusLabel}>Status:</Text>
+              <TouchableOpacity 
+                style={[styles.statusOption, editStatus === 'pending' && styles.statusOptionActive]}
+                onPress={() => setEditStatus('pending')}>
+                <Text>🟡 Pending</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.statusOption, editStatus === 'in_progress' && styles.statusOptionActive]}
+                onPress={() => setEditStatus('in_progress')}>
+                <Text>🔵 In Progress</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.statusOption, editStatus === 'resolved' && styles.statusOptionActive]}
+                onPress={() => setEditStatus('resolved')}>
+                <Text>🟢 Resolved</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.submitButton]}
+                onPress={editPost}>
+                <Text style={styles.submitButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  header: {
-    backgroundColor: '#1a3a6b',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  backBtn: { color: '#fff', fontSize: 15 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  tabBtn: {
-    flex: 1, paddingVertical: 13, alignItems: 'center',
-  },
-  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: '#1a3a6b' },
-  tabBtnText: { fontSize: 14, color: '#888' },
-  tabBtnTextActive: { color: '#1a3a6b', fontWeight: '600' },
-  list: { padding: 16 },
-  card: {
-    backgroundColor: '#fff', borderRadius: 10,
-    padding: 14, marginBottom: 12, elevation: 2,
-  },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#222', flex: 1, marginRight: 8 },
-  statusBadge: { borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3 },
-  statusText: { fontSize: 11, fontWeight: '600' },
-  cardCategory: { fontSize: 12, color: '#1a3a6b', marginBottom: 4 },
-  cardDesc: { fontSize: 13, color: '#666', marginBottom: 6 },
-  cardMeta: { fontSize: 12, color: '#888', marginBottom: 10 },
-  changeStatusBtn: {
-    borderWidth: 1, borderColor: '#1a3a6b',
-    borderRadius: 6, paddingVertical: 7, alignItems: 'center',
-  },
-  changeStatusText: { color: '#1a3a6b', fontSize: 13, fontWeight: '600' },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  annForm: { padding: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 6, marginTop: 14 },
-  input: {
-    backgroundColor: '#fff', borderWidth: 1, borderColor: '#e0e0e0',
-    borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 14, color: '#333',
-  },
-  textArea: { height: 120, textAlignVertical: 'top' },
-  postBtn: {
-    backgroundColor: '#1a3a6b', borderRadius: 8,
-    paddingVertical: 14, alignItems: 'center',
-    marginTop: 24, marginBottom: 40,
-  },
-  postBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    backgroundColor: '#fff', borderTopLeftRadius: 16,
-    borderTopRightRadius: 16, padding: 24,
-  },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#888', marginBottom: 16 },
-  statusOption: {
-    borderRadius: 8, paddingVertical: 13,
-    alignItems: 'center', marginBottom: 10,
-  },
-  statusOptionText: { fontSize: 15, fontWeight: '600' },
-  cancelBtn: {
-    paddingVertical: 13, alignItems: 'center',
-    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8,
-  },
-  cancelBtnText: { fontSize: 15, color: '#888' },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingTop: 50 },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  logoutButton: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 8, borderRadius: 8 },
+  logoutText: { color: '#fff' },
+  tabContainer: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 15 },
+  tab: { flex: 1, padding: 12, alignItems: 'center', borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)' },
+  activeTab: { backgroundColor: 'rgba(255,255,255,0.4)' },
+  tabText: { color: '#fff', fontWeight: 'bold' },
+  list: { padding: 15 },
+  postCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 12 },
+  postHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  postTitle: { fontSize: 16, fontWeight: 'bold', flex: 1 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 15 },
+  statusText: { fontSize: 10, color: '#fff', fontWeight: 'bold' },
+  postMeta: { fontSize: 12, color: '#666', marginBottom: 8 },
+  postDescription: { fontSize: 14, color: '#333', marginBottom: 12 },
+  postActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  actionButton: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  statusButton: { backgroundColor: '#e9ecef' },
+  editButton: { backgroundColor: '#ffc107' },
+  deleteButton: { backgroundColor: '#dc3545' },
+  actionButtonText: { fontSize: 11, fontWeight: 'bold' },
+  addButton: { backgroundColor: '#28a745', margin: 15, padding: 12, borderRadius: 10, alignItems: 'center' },
+  addButtonText: { color: '#fff', fontWeight: 'bold' },
+  announcementCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 12 },
+  announcementHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  announcementTitle: { fontSize: 16, fontWeight: 'bold' },
+  deleteAnnouncement: { fontSize: 18 },
+  announcementContent: { fontSize: 14, color: '#333', marginBottom: 8 },
+  announcementMeta: { fontSize: 12, color: '#666' },
+  emptyText: { textAlign: 'center', color: '#fff', marginTop: 50 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 20, width: '90%' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+  modalInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 12, marginBottom: 15 },
+  modalTextArea: { height: 100, textAlignVertical: 'top' },
+  modalButtons: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
+  modalButton: { flex: 1, padding: 12, borderRadius: 10, alignItems: 'center' },
+  cancelButton: { backgroundColor: '#e9ecef' },
+  submitButton: { backgroundColor: '#1e3c72' },
+  cancelButtonText: { color: '#333' },
+  submitButtonText: { color: '#fff', fontWeight: 'bold' },
+  statusOptions: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, flexWrap: 'wrap' },
+  statusLabel: { marginRight: 10, fontWeight: 'bold' },
+  statusOption: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: '#e9ecef', marginRight: 8 },
+  statusOptionActive: { backgroundColor: '#1e3c72' },
 });

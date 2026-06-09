@@ -1,36 +1,26 @@
-import { initializeApp, getApps } from 'firebase/app';
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-} from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBpMMTfFugXUuR7qUgO3Ibiep2kQH-KWHM',
-  authDomain: 'civi-fix13.firebaseapp.com',
-  projectId: 'civi-fix13',
-  storageBucket: 'civi-fix13.firebasestorage.app',
-  messagingSenderId: '345242762024',
-  appId: '1:345242762024:web:9284f25927732c444d6e1d',
+  apiKey: "AIzaSyBpMMTfFugXUuR7qUgO3Ibiep2kQH-KWHM",
+  authDomain: "civi-fix13.firebaseapp.com",
+  projectId: "civi-fix13",
+  storageBucket: "civi-fix13.firebasestorage.app",
+  messagingSenderId: "345242762024",
+  appId: "1:345242762024:web:9284f25927732c444d6e1d"
 };
 
-if (!getApps().length) {
-  initializeApp(firebaseConfig);
-}
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
-const auth = getAuth();
+// Initialize Auth with AsyncStorage persistence (keeps user logged in)
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
 
-export const loginWithEmail = async (email, password) => {
-  return signInWithEmailAndPassword(auth, email, password);
-};
+const db = getFirestore(app);
 
-export const registerWithEmail = async (email, password) => {
-  return createUserWithEmailAndPassword(auth, email, password);
-};
-
-export const logout = async () => {
-  return signOut(auth);
-};
-
-export default auth;
+export { auth, db };
+export default app;
