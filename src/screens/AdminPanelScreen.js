@@ -136,3 +136,25 @@ export default function AdminPanelScreen({ navigation }) {
       Alert.alert('Error', error.message);
     }
   };
+
+  const deleteAnnouncement = async (announcementId) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Delete this announcement?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'announcements', announcementId));
+              Alert.alert('Success', 'Announcement deleted!');
+            } catch (error) {
+              Alert.alert('Error', error.message);
+            }
+          }
+        }
+      ]
+    );
+  };
