@@ -113,3 +113,26 @@ export default function AdminPanelScreen({ navigation }) {
       Alert.alert('Error', error.message);
     }
   };
+
+  const createAnnouncement = async () => {
+    if (!announcementTitle || !announcementContent) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'announcements'), {
+        title: announcementTitle,
+        content: announcementContent,
+        createdBy: auth.currentUser.uid,
+        createdByName: auth.currentUser.displayName || 'Admin',
+        createdAt: serverTimestamp(),
+        isUrgent: false
+      });
+      setAnnouncementTitle('');
+      setAnnouncementContent('');
+      setModalVisible(false);
+      Alert.alert('Success', 'Announcement posted!');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
