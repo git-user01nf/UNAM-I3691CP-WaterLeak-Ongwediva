@@ -49,3 +49,8 @@ export default function AdminPanelScreen({ navigation }) {
       unsubscribeAnnouncements();
     };
   }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigation.replace('Login');
+  };
