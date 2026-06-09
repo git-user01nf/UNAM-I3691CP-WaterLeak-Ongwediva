@@ -1,580 +1,296 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet,
-  Alert, ScrollView, Image, RefreshControl
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  FlatList, Image, ActivityIndicator, Alert, TextInput, RefreshControl
 } from 'react-native';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, increment, getDoc, setDoc } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
-import { auth, db } from '../services/firebase';
-import { LinearGradient } from 'expo-linear-gradient';
+import { logout } from '../services/firebase';
+import { getFirestore, collection, getDocs, orderBy, query } from 'firebase/firestore';
 
-// Category definitions
-const CATEGORIES = [
-  { id: 'all', name: 'All Posts', icon: '📋', color: '#6c757d' },
-  { id: 'water', name: 'Water Leaks', icon: '💧', color: '#2196F3' },
-  { id: 'roads', name: 'Roads', icon: '🛣️', color: '#9C27B0' },
-  { id: 'sanitation', name: 'Sanitation', icon: '🗑️', color: '#4CAF50' },
-  { id: 'safety', name: 'Safety', icon: '🛡️', color: '#F44336' },
-  { id: 'environment', name: 'Environment', icon: '🌿', color: '#8BC34A' },
-  { id: 'announcements', name: 'Announcements', icon: '📢', color: '#FF9800' }
-];
+const CATEGORIES = ['All Posts', 'Water Leaks', 'Roads', 'Sanitation', 'Safety', 'Environment'];
+
+const CATEGORY_ICONS = {
+  'All Posts': '📋',
+  'Water Leaks': '💧',
+  'Roads': '🏗️',
+  'Sanitation': '🗑️',
+  'Safety': '🛡️',
+  'Environment': '🌿',
+};
 
 export default function HomeScreen({ navigation }) {
-  const [activeTab, setActiveTab] = useState('all');
-  const [allPosts, setAllPosts] = useState([]);
-  const [filteredPosts, setFilteredPosts] = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('All Posts');
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [likedPosts, setLikedPosts] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
-    const currentUser = auth.currentUser;
-    setUser(currentUser);
-    
-    const checkAdminStatus = async () => {
-      if (currentUser) {
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        setIsAdmin(userDoc.exists() && userDoc.data().isAdmin);
-      }
-    };
-    checkAdminStatus();
-
-    const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
-    const unsubscribePosts = onSnapshot(q, async (snapshot) => {
-      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setAllPosts(postsData);
-      filterPostsByCategory(activeTab, postsData);
-      
-      // Check which posts the current user has liked
-      if (currentUser) {
-        const likedStatus = {};
-        for (const post of postsData) {
-          const likeRef = doc(db, 'reports', post.id, 'likes', currentUser.uid);
-          const likeDoc = await getDoc(likeRef);
-          likedStatus[post.id] = likeDoc.exists();
-        }
-        setLikedPosts(likedStatus);
-      }
-    });
-
-    const announcementsQuery = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
-    const unsubscribeAnnouncements = onSnapshot(announcementsQuery, (snapshot) => {
-      const announcementsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAnnouncements(announcementsData);
-    });
-
-    return () => {
-      unsubscribePosts();
-      unsubscribeAnnouncements();
-    };
+    fetchReports();
   }, []);
 
-  const filterPostsByCategory = (categoryId, posts = allPosts) => {
-    if (categoryId === 'all') {
-      setFilteredPosts(posts);
-    } else {
-      const filtered = posts.filter(post => post.category === categoryId);
-      setFilteredPosts(filtered);
+  const fetchReports = async () => {
+    try {
+      const db = getFirestore();
+      const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setReports(data);
+    } catch (error) {
+      setReports([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleTabPress = (categoryId) => {
-    setActiveTab(categoryId);
-    if (categoryId === 'announcements') {
-      navigation.navigate('Announcements');
-    } else {
-      filterPostsByCategory(categoryId);
-    }
-  };
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchReports();
+  }, []);
 
   const handleLogout = async () => {
-    await signOut(auth);
-    navigation.replace('Login');
-  };
-
-  const handleLike = async (postId, currentLikes) => {
-    // Silently ignore if not logged in
-    if (!user) {
-      return;
-    }
-
-    // Silently ignore if already liked
-    if (likedPosts[postId]) {
-      return;
-    }
-
     try {
-      const reportRef = doc(db, 'reports', postId);
-      const likeRef = doc(db, 'reports', postId, 'likes', user.uid);
-      
-      // Check if like already exists (double-check)
-      const existingLike = await getDoc(likeRef);
-      if (existingLike.exists()) {
-        setLikedPosts(prev => ({ ...prev, [postId]: true }));
-        return;
-      }
-      
-      // Create the like document
-      await setDoc(likeRef, { 
-        userId: user.uid,
-        likedAt: new Date()
-      });
-      
-      // Increment like count
-      await updateDoc(reportRef, { likes: increment(1) });
-      
-      // Update local state
-      setLikedPosts(prev => ({ ...prev, [postId]: true }));
-      
-      // Update the post in the local list to reflect new like count
-      const updatedPosts = allPosts.map(post => 
-        post.id === postId ? { ...post, likes: (post.likes || 0) + 1 } : post
-      );
-      setAllPosts(updatedPosts);
-      filterPostsByCategory(activeTab, updatedPosts);
-      
+      await logout();
     } catch (error) {
-      // Silently ignore errors
-      console.error('Like error:', error);
+      Alert.alert('Error', 'Failed to logout');
     }
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'in_progress': return { text: '🟡 In Progress', color: '#ffc107' };
-      case 'resolved': return { text: '🟢 Resolved', color: '#28a745' };
-      default: return { text: '🔴 Pending', color: '#dc3545' };
-    }
-  };
+  const filteredReports = reports.filter(r => {
+    const matchesCategory = activeCategory === 'All Posts' || r.category === activeCategory;
+    const matchesSearch =
+      searchQuery.trim() === '' ||
+      r.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  const getCategoryIcon = (categoryId) => {
-    const category = CATEGORIES.find(c => c.id === categoryId);
-    return category ? category.icon : '📋';
-  };
-
-  const renderPost = ({ item }) => {
-    const status = getStatusBadge(item.status);
-    const isLiked = likedPosts[item.id];
-    const displayLikeCount = item.likes || 0;
-    
-    return (
-      <TouchableOpacity 
-        style={styles.postCard} 
-        onPress={() => navigation.navigate('ReportDetail', { report: item })}
-        activeOpacity={0.9}
-      >
-        {item.category === 'water' && (
-          <View style={styles.waterLeakBadge}>
-            <Text style={styles.waterLeakBadgeText}>💧 WATER LEAK REPORT</Text>
+  const renderReport = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('ReportDetailScreen', { report: item })}
+    >
+      {item.imageUrl ? (
+        <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
+      ) : (
+        <View style={[styles.cardImage, styles.cardImagePlaceholder]}>
+          <Text style={styles.placeholderText}>No Image</Text>
+        </View>
+      )}
+      <View style={styles.cardBody}>
+        <View style={styles.cardHeader}>
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryBadgeText}>
+              {CATEGORY_ICONS[item.category] || '📋'} {item.category?.toUpperCase() || 'REPORT'}
+            </Text>
           </View>
-        )}
-        
-        {item.imageUrl && (
-          <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-        )}
-        
-        <View style={styles.postContent}>
-          <View style={styles.postHeader}>
-            <View style={styles.titleRow}>
-              <Text style={styles.categoryIcon}>{getCategoryIcon(item.category)}</Text>
-              <Text style={styles.postTitle} numberOfLines={1}>{item.title}</Text>
-            </View>
-            <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-              <Text style={styles.statusText}>{status.text}</Text>
-            </View>
-          </View>
-          
-          <Text style={styles.postDescription} numberOfLines={2}>
-            {item.description}
-          </Text>
-          
-          <View style={styles.postFooter}>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>👤 {item.username}</Text>
-              <Text style={styles.postDate}>
-                📅 {item.createdAt?.toDate?.()?.toLocaleDateString() || 'Just now'}
-              </Text>
-            </View>
-            <View style={styles.statsRow}>
-              <TouchableOpacity 
-                onPress={() => handleLike(item.id, item.likes)} 
-                style={[styles.likeButton, isLiked && styles.likedButton]}
-                disabled={isLiked}
-              >
-                <Text style={[styles.likeText, isLiked && styles.likedButtonText]}>
-                  {isLiked ? '❤️ Liked' : `❤️ ${displayLikeCount}`}
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.commentText}>💬 {item.comments || 0}</Text>
-            </View>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusBadgeText}>{item.status || 'Pending'}</Text>
           </View>
         </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📭</Text>
-      <Text style={styles.emptyTitle}>No reports yet</Text>
-      <Text style={styles.emptyText}>Be the first to report an issue!</Text>
-      <TouchableOpacity 
-        style={styles.emptyButton}
-        onPress={() => navigation.navigate('Report', { categoryId: activeTab === 'all' ? null : activeTab })}
-      >
-        <Text style={styles.emptyButtonText}>➕ Report Now</Text>
-      </TouchableOpacity>
-    </View>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardMeta}>👤 {item.username || 'Anonymous'}</Text>
+          <Text style={styles.cardMeta}>
+            📅 {item.createdAt?.toDate?.().toLocaleDateString() || ''}
+          </Text>
+          <View style={styles.cardActions}>
+            <Text style={styles.actionText}>❤️ {item.likes || 0}</Text>
+            <Text style={styles.actionText}>💬 {item.comments || 0}</Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#1e3c72', '#2a5298']} style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.headerTitle}>Fix-Flow</Text>
-            <Text style={styles.headerSubtitle}>Water Leak & Infrastructure Reporter</Text>
-          </View>
-          <View style={styles.headerButtons}>
-            {isAdmin && (
-              <TouchableOpacity onPress={() => navigation.navigate('AdminPanel')} style={styles.adminButton}>
-                <Text style={styles.adminButtonText}>🏛️ Admin</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Fix-Flow</Text>
+          <Text style={styles.headerSubtitle}>Water Leak & Infrastructure Reporter</Text>
         </View>
-      </LinearGradient>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchWrapper}>
+        <View style={[styles.searchBar, searchFocused && styles.searchBarFocused]}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search reports..."
+            placeholderTextColor="#aaa"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Text style={styles.clearBtn}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
       <View style={styles.tabsWrapper}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}
-          contentContainerStyle={styles.tabsContent}
-        >
-          {CATEGORIES.map((category) => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+          {CATEGORIES.map(cat => (
             <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.tab,
-                activeTab === category.id && styles.activeTab,
-                { borderTopColor: category.color }
-              ]}
-              onPress={() => handleTabPress(category.id)}
-              activeOpacity={0.8}
+              key={cat}
+              style={[styles.tab, activeCategory === cat && styles.tabActive]}
+              onPress={() => setActiveCategory(cat)}
             >
-              <Text style={styles.tabIcon}>{category.icon}</Text>
-              <Text style={[
-                styles.tabText,
-                activeTab === category.id && styles.activeTabText
-              ]}>
-                {category.name}
+              <Text style={[styles.tabText, activeCategory === cat && styles.tabTextActive]}>
+                {CATEGORY_ICONS[cat]} {cat}
               </Text>
+              {activeCategory === cat && <View style={styles.tabUnderline} />}
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
-      <FlatList
-        data={filteredPosts}
-        renderItem={renderPost}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => setRefreshing(false)} />}
-        ListEmptyComponent={renderEmptyState}
-        ListFooterComponent={<View style={{ height: 80 }} />}
-      />
-
-      {activeTab !== 'announcements' && (
-        <TouchableOpacity 
-          style={styles.fab}
-          onPress={() => navigation.navigate('Report', { categoryId: activeTab === 'all' ? null : activeTab })}
-        >
-          <LinearGradient
-            colors={['#2196F3', '#764ba2']}
-            style={styles.fabGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Text style={styles.fabText}>+</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#1a3a6b" />
+      ) : filteredReports.length === 0 ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyIcon}>📬</Text>
+          <Text style={styles.emptyTitle}>
+            {searchQuery ? 'No results found' : 'No reports yet'}
+          </Text>
+          <Text style={styles.emptySubtitle}>
+            {searchQuery ? `No reports match "${searchQuery}"` : 'Be the first to report an issue!'}
+          </Text>
+          {!searchQuery && (
+            <TouchableOpacity
+              style={styles.reportNowBtn}
+              onPress={() => navigation.navigate('ReportScreen')}
+            >
+              <Text style={styles.reportNowText}>+ Report Now</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <FlatList
+          data={filteredReports}
+          keyExtractor={item => item.id}
+          renderItem={renderReport}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#1a3a6b']}
+              tintColor="#1a3a6b"
+            />
+          }
+        />
       )}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('ReportScreen')}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f7fa',
-  },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
   header: {
+    backgroundColor: '#1a3a6b',
     paddingTop: 50,
-    paddingBottom: 15,
-    paddingHorizontal: 20,
-  },
-  headerTop: {
+    paddingBottom: 16,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+  headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  headerSubtitle: { color: '#a0b4d0', fontSize: 12, marginTop: 2 },
+  logoutBtn: {
+    borderWidth: 1, borderColor: '#fff', borderRadius: 6,
+    paddingHorizontal: 12, paddingVertical: 5,
   },
-  headerSubtitle: {
-    fontSize: 10,
-    color: '#fff',
-    opacity: 0.8,
-    marginTop: 2,
+  logoutText: { color: '#fff', fontSize: 13 },
+  searchWrapper: {
+    backgroundColor: '#1a3a6b',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  adminButton: {
-    backgroundColor: 'rgba(255,215,0,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-  },
-  adminButtonText: {
-    color: '#ffd700',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-  logoutButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 15,
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 11,
-  },
-  tabsWrapper: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    zIndex: 10,
-  },
-  tabsContainer: {
-    flexGrow: 0,
-  },
-  tabsContent: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  tab: {
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 25,
-    backgroundColor: '#f8f9fa',
-    borderTopWidth: 3,
-  },
-  activeTab: {
-    backgroundColor: '#e8f0fe',
-  },
-  tabIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#1e3c72',
-    fontWeight: 'bold',
-  },
-  listContent: {
-    padding: 12,
-    paddingBottom: 80,
-  },
-  postCard: {
     backgroundColor: '#fff',
-    borderRadius: 14,
-    marginBottom: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  waterLeakBadge: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    zIndex: 10,
-    borderRadius: 15,
+  searchBarFocused: {
+    borderColor: '#a0c4ff',
   },
-  waterLeakBadgeText: {
-    color: '#fff',
-    fontSize: 9,
-    fontWeight: 'bold',
+  searchIcon: { fontSize: 16, marginRight: 8 },
+  searchInput: {
+    flex: 1, fontSize: 14, color: '#333',
   },
-  postImage: {
-    width: '100%',
-    height: 160,
-    resizeMode: 'cover',
+  clearBtn: { fontSize: 14, color: '#aaa', paddingLeft: 8 },
+  tabsWrapper: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e0e0e0' },
+  tabs: { paddingHorizontal: 8, paddingVertical: 8 },
+  tab: { paddingHorizontal: 12, paddingVertical: 6, marginRight: 4, position: 'relative' },
+  tabActive: {},
+  tabText: { fontSize: 13, color: '#666' },
+  tabTextActive: { color: '#1a3a6b', fontWeight: '600' },
+  tabUnderline: {
+    position: 'absolute', bottom: 0, left: 8, right: 8,
+    height: 2, backgroundColor: '#1a3a6b', borderRadius: 1,
   },
-  postContent: {
-    padding: 12,
+  list: { padding: 12 },
+  card: {
+    backgroundColor: '#fff', borderRadius: 10, marginBottom: 14,
+    overflow: 'hidden', elevation: 2,
   },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+  cardImage: { width: '100%', height: 180 },
+  cardImagePlaceholder: { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' },
+  placeholderText: { color: '#999', fontSize: 13 },
+  cardBody: { padding: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  categoryBadge: {
+    backgroundColor: '#e8f0fe', borderRadius: 4,
+    paddingHorizontal: 8, paddingVertical: 3,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  categoryIcon: {
-    fontSize: 14,
-    marginRight: 6,
-  },
-  postTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
-  },
+  categoryBadgeText: { fontSize: 11, color: '#1a3a6b', fontWeight: '600' },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 6,
+    backgroundColor: '#fce4e4', borderRadius: 4,
+    paddingHorizontal: 8, paddingVertical: 3,
   },
-  statusText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#fff',
+  statusBadgeText: { fontSize: 11, color: '#c0392b', fontWeight: '600' },
+  cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#222', marginBottom: 4 },
+  cardDesc: { fontSize: 13, color: '#666', marginBottom: 8, lineHeight: 18 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  cardMeta: { fontSize: 12, color: '#888' },
+  cardActions: { flexDirection: 'row', gap: 10, marginLeft: 'auto' },
+  actionText: { fontSize: 12, color: '#888' },
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 4 },
+  emptySubtitle: { fontSize: 14, color: '#888', marginBottom: 20, textAlign: 'center' },
+  reportNowBtn: {
+    backgroundColor: '#1a3a6b', borderRadius: 25,
+    paddingHorizontal: 24, paddingVertical: 12,
   },
-  postDescription: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-    marginBottom: 8,
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  userName: {
-    fontSize: 11,
-    color: '#888',
-  },
-  postDate: {
-    fontSize: 10,
-    color: '#aaa',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  likeButton: {
-    padding: 4,
-    paddingHorizontal: 8,
-    borderRadius: 15,
-  },
-  likedButton: {
-    backgroundColor: '#dc3545',
-  },
-  likeText: {
-    fontSize: 11,
-    color: '#dc3545',
-  },
-  likedButtonText: {
-    color: '#fff',
-  },
-  commentText: {
-    fontSize: 11,
-    color: '#17a2b8',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    fontSize: 50,
-    marginBottom: 12,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 6,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#999',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  emptyButton: {
-    backgroundColor: '#1e3c72',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-  },
-  emptyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
+  reportNowText: { color: '#fff', fontSize: 15, fontWeight: '600' },
   fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 55,
-    height: 55,
-    borderRadius: 28,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    position: 'absolute', bottom: 24, right: 24,
+    backgroundColor: '#1a75ff', width: 52, height: 52,
+    borderRadius: 26, justifyContent: 'center', alignItems: 'center', elevation: 5,
   },
-  fabGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 26,
-    fontWeight: 'bold',
-  },
+  fabText: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
 });
