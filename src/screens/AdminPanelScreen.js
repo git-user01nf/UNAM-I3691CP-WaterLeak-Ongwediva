@@ -91,7 +91,6 @@ export default function AdminPanelScreen({ navigation }) {
 
   const editPost = async () => {
     if (!editingPost) return;
-    
     try {
       await updateDoc(doc(db, 'reports', editingPost.id), {
         title: editTitle,
@@ -100,8 +99,6 @@ export default function AdminPanelScreen({ navigation }) {
         updatedAt: serverTimestamp(),
         editedBy: 'admin'
       });
-      
-      // Add admin comment about edit
       await addDoc(collection(db, 'reports', editingPost.id, 'comments'), {
         userId: auth.currentUser.uid,
         username: '🏛️ Town Council Admin',
@@ -109,7 +106,6 @@ export default function AdminPanelScreen({ navigation }) {
         createdAt: serverTimestamp(),
         isAuto: true
       });
-      
       Alert.alert('Success', 'Post updated!');
       setEditModalVisible(false);
       setEditingPost(null);
@@ -123,7 +119,6 @@ export default function AdminPanelScreen({ navigation }) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
     try {
       await addDoc(collection(db, 'announcements'), {
         title: announcementTitle,
@@ -133,7 +128,6 @@ export default function AdminPanelScreen({ navigation }) {
         createdAt: serverTimestamp(),
         isUrgent: false
       });
-      
       setAnnouncementTitle('');
       setAnnouncementContent('');
       setModalVisible(false);
@@ -191,31 +185,20 @@ export default function AdminPanelScreen({ navigation }) {
       </View>
       <Text style={styles.postMeta}>By: {item.username}</Text>
       <Text style={styles.postDescription} numberOfLines={2}>{item.description}</Text>
-      
       <View style={styles.postActions}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.statusButton]}
-          onPress={() => updatePostStatus(item.id, 'pending')}>
+        <TouchableOpacity style={[styles.actionButton, styles.statusButton]} onPress={() => updatePostStatus(item.id, 'pending')}>
           <Text style={styles.actionButtonText}>🟡 Pending</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.statusButton]}
-          onPress={() => updatePostStatus(item.id, 'in_progress')}>
+        <TouchableOpacity style={[styles.actionButton, styles.statusButton]} onPress={() => updatePostStatus(item.id, 'in_progress')}>
           <Text style={styles.actionButtonText}>🔵 In Progress</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.statusButton]}
-          onPress={() => updatePostStatus(item.id, 'resolved')}>
+        <TouchableOpacity style={[styles.actionButton, styles.statusButton]} onPress={() => updatePostStatus(item.id, 'resolved')}>
           <Text style={styles.actionButtonText}>🟢 Resolved</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.editButton]}
-          onPress={() => openEditModal(item)}>
+        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => openEditModal(item)}>
           <Text style={styles.actionButtonText}>✏️ Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.deleteButton]}
-          onPress={() => deletePost(item.id)}>
+        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => deletePost(item.id)}>
           <Text style={styles.actionButtonText}>🗑️ Delete</Text>
         </TouchableOpacity>
       </View>
@@ -251,134 +234,58 @@ export default function AdminPanelScreen({ navigation }) {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'reports' && styles.activeTab]}
-          onPress={() => setActiveTab('reports')}>
+        <TouchableOpacity style={[styles.tab, activeTab === 'reports' && styles.activeTab]} onPress={() => setActiveTab('reports')}>
           <Text style={styles.tabText}>📋 Reports ({reports.length})</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'announcements' && styles.activeTab]}
-          onPress={() => setActiveTab('announcements')}>
+        <TouchableOpacity style={[styles.tab, activeTab === 'announcements' && styles.activeTab]} onPress={() => setActiveTab('announcements')}>
           <Text style={styles.tabText}>📢 Announcements ({announcements.length})</Text>
         </TouchableOpacity>
       </View>
-
       {activeTab === 'reports' ? (
-        <FlatList
-          data={reports}
-          renderItem={renderReport}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.emptyText}>No reports yet</Text>}
-        />
+        <FlatList data={reports} renderItem={renderReport} keyExtractor={item => item.id} contentContainerStyle={styles.list} ListEmptyComponent={<Text style={styles.emptyText}>No reports yet</Text>} />
       ) : (
         <>
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => setModalVisible(true)}>
+          <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
             <Text style={styles.addButtonText}>➕ Create Announcement</Text>
           </TouchableOpacity>
-          <FlatList
-            data={announcements}
-            renderItem={renderAnnouncement}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={<Text style={styles.emptyText}>No announcements yet</Text>}
-          />
+          <FlatList data={announcements} renderItem={renderAnnouncement} keyExtractor={item => item.id} contentContainerStyle={styles.list} ListEmptyComponent={<Text style={styles.emptyText}>No announcements yet</Text>} />
         </>
       )}
-
-      {/* Create Announcement Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Create Announcement</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Title"
-              value={announcementTitle}
-              onChangeText={setAnnouncementTitle}
-            />
-            <TextInput
-              style={[styles.modalInput, styles.modalTextArea]}
-              placeholder="Announcement content"
-              value={announcementContent}
-              onChangeText={setAnnouncementContent}
-              multiline
-              numberOfLines={4}
-            />
+            <TextInput style={styles.modalInput} placeholder="Title" value={announcementTitle} onChangeText={setAnnouncementTitle} />
+            <TextInput style={[styles.modalInput, styles.modalTextArea]} placeholder="Announcement content" value={announcementContent} onChangeText={setAnnouncementContent} multiline numberOfLines={4} />
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.submitButton]}
-                onPress={createAnnouncement}>
+              <TouchableOpacity style={[styles.modalButton, styles.submitButton]} onPress={createAnnouncement}>
                 <Text style={styles.submitButtonText}>Post</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-
-      {/* Edit Post Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={editModalVisible}
-        onRequestClose={() => setEditModalVisible(false)}>
+      <Modal animationType="slide" transparent={true} visible={editModalVisible} onRequestClose={() => setEditModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Post</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Title"
-              value={editTitle}
-              onChangeText={setEditTitle}
-            />
-            <TextInput
-              style={[styles.modalInput, styles.modalTextArea]}
-              placeholder="Description"
-              value={editDescription}
-              onChangeText={setEditDescription}
-              multiline
-              numberOfLines={4}
-            />
+            <TextInput style={styles.modalInput} placeholder="Title" value={editTitle} onChangeText={setEditTitle} />
+            <TextInput style={[styles.modalInput, styles.modalTextArea]} placeholder="Description" value={editDescription} onChangeText={setEditDescription} multiline numberOfLines={4} />
             <View style={styles.statusOptions}>
               <Text style={styles.statusLabel}>Status:</Text>
-              <TouchableOpacity 
-                style={[styles.statusOption, editStatus === 'pending' && styles.statusOptionActive]}
-                onPress={() => setEditStatus('pending')}>
-                <Text>🟡 Pending</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.statusOption, editStatus === 'in_progress' && styles.statusOptionActive]}
-                onPress={() => setEditStatus('in_progress')}>
-                <Text>🔵 In Progress</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.statusOption, editStatus === 'resolved' && styles.statusOptionActive]}
-                onPress={() => setEditStatus('resolved')}>
-                <Text>🟢 Resolved</Text>
-              </TouchableOpacity>
+              <TouchableOpacity style={[styles.statusOption, editStatus === 'pending' && styles.statusOptionActive]} onPress={() => setEditStatus('pending')}><Text>🟡 Pending</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.statusOption, editStatus === 'in_progress' && styles.statusOptionActive]} onPress={() => setEditStatus('in_progress')}><Text>🔵 In Progress</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.statusOption, editStatus === 'resolved' && styles.statusOptionActive]} onPress={() => setEditStatus('resolved')}><Text>🟢 Resolved</Text></TouchableOpacity>
             </View>
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setEditModalVisible(false)}>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setEditModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.submitButton]}
-                onPress={editPost}>
+              <TouchableOpacity style={[styles.modalButton, styles.submitButton]} onPress={editPost}>
                 <Text style={styles.submitButtonText}>Save</Text>
               </TouchableOpacity>
             </View>
