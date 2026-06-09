@@ -66,3 +66,25 @@ export default function AdminPanelScreen({ navigation }) {
       Alert.alert('Error', error.message);
     }
   };
+
+  const deletePost = async (postId) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'reports', postId));
+              Alert.alert('Success', 'Post deleted!');
+            } catch (error) {
+              Alert.alert('Error', error.message);
+            }
+          }
+        }
+      ]
+    );
+  };
