@@ -174,3 +174,33 @@ export default function AdminPanelScreen({ navigation }) {
       default: return '#dc3545';
     }
   };
+
+  const renderReport = ({ item }) => (
+    <View style={styles.postCard}>
+      <View style={styles.postHeader}>
+        <Text style={styles.postTitle}>{item.title}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+          <Text style={styles.statusText}>{item.status || 'pending'}</Text>
+        </View>
+      </View>
+      <Text style={styles.postMeta}>By: {item.username}</Text>
+      <Text style={styles.postDescription} numberOfLines={2}>{item.description}</Text>
+      <View style={styles.postActions}>
+        <TouchableOpacity style={[styles.actionButton, styles.statusButton]} onPress={() => updatePostStatus(item.id, 'pending')}>
+          <Text style={styles.actionButtonText}>🟡 Pending</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.actionButton, styles.statusButton]} onPress={() => updatePostStatus(item.id, 'in_progress')}>
+          <Text style={styles.actionButtonText}>🔵 In Progress</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.actionButton, styles.statusButton]} onPress={() => updatePostStatus(item.id, 'resolved')}>
+          <Text style={styles.actionButtonText}>🟢 Resolved</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => openEditModal(item)}>
+          <Text style={styles.actionButtonText}>✏️ Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => deletePost(item.id)}>
+          <Text style={styles.actionButtonText}>🗑️ Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
