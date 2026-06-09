@@ -54,3 +54,15 @@ export default function AdminPanelScreen({ navigation }) {
     await signOut(auth);
     navigation.replace('Login');
   };
+
+  const updatePostStatus = async (postId, newStatus) => {
+    try {
+      await updateDoc(doc(db, 'reports', postId), {
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      });
+      Alert.alert('Success', 'Status updated!');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
